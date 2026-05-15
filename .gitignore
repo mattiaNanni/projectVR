@@ -1,0 +1,7 @@
+# Ignora le dipendenze locali (IntelliSense)
+assets/js/node_modules/
+
+# Ignora file di log e cache di sistema
+npm-debug.log*
+.DS_Store
+Thumbs.db
