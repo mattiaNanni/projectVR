@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Babylon.js - Struttura Sottocartelle</title>
+    
+    <!-- Collegamento allo stile nella sottocartella assets/css -->
+    <link rel="stylesheet" href="assets/css/style.css">
+
+    <!-- Caricamento della libreria Babylon.js tramite CDN -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+</head>
+<body>
+
+    <!-- Il Canvas dove verrà renderizzato il mondo 3D -->
+    <canvas id="renderCanvas"></canvas>
+
+    <!-- 
+        IMPORTANTE: 
+        1. Usiamo type="module" per gestire file JS esterni.
+        2. Il percorso punta alla tua sottocartella assets/js/
+    -->
+    <script src="assets/js/main.js" type="module"></script>
+
+    <!-- Testo di fallback o log (opzionale, utile per il debug) -->
+    <noscript>Devi abilitare JavaScript per vedere la scena 3D.</noscript>
+
+</body>
+</html>
