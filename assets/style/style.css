@@ -1,12 +1,17 @@
+/* Rimuove i margini predefiniti del browser e blocca lo scroll */
 html, body {
+    background-color: red !important;
     overflow: hidden;
     width: 100%;
     height: 100%;
     margin: 0;
     padding: 0;
 }
+
+/* Forza il canvas a coprire l'intera area visibile */
 #renderCanvas {
     width: 100%;
     height: 100%;
-    touch-action: none;
+    touch-action: none; /* Impedisce interferenze touch su mobile */
+    display: block;     /* Rimuove spazi vuoti sotto il canvas */
 }
