@@ -3,6 +3,7 @@ const engine = new BABYLON.Engine(canvas, true);
 
 const createScene = function () {
     const scene = new BABYLON.Scene(engine);
+    scene.collisionsEnabled = true;
 
     // 1. Creazione della Camera
     const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 2, -10), scene);
@@ -48,6 +49,7 @@ const createScene = function () {
     // Aggiungiamo un terreno e una luce per vedere il movimento
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
     const ground = BABYLON.MeshBuilder.CreateGround("ground", {width: 20, height: 20}, scene);
+    ground.checkCollisions = true;
     const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", {diameter: 2}, scene);
     sphere.position.y = 1;
 
