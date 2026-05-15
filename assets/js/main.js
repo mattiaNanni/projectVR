@@ -6,6 +6,9 @@ const createScene = function () {
 
     // 1. Creazione della Camera
     const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 2, -10), scene);
+
+    // telecamer fissa
+    camera.inputs.removeByType("FreeCameraMouseInput");
     
     // 2. Mappatura tasti WASD
     // I codici numerici corrispondono alle lettere sulla tastiera
@@ -13,6 +16,10 @@ const createScene = function () {
     camera.keysDown.push(83);  // S
     camera.keysLeft.push(65);  // A
     camera.keysRight.push(68); // D
+
+    //Mappatura asse verticale
+    camera.keysDownward.push(81); // Q
+    camera.keysUpward.push(69);   // E
 
     // 3. Attivazione controlli
     camera.attachControl(canvas, true);
