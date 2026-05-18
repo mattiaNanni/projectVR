@@ -1,7 +1,7 @@
 const canvas = document.getElementById("renderCanvas");
 const engine = new BABYLON.Engine(canvas, true);
 
-const createScene = function () {
+const createScene = async function () {
     const scene = new BABYLON.Scene(engine);
     scene.collisionsEnabled = true;
     scene.gravity = new BABYLON.Vector3(0, -0.15, 0);
@@ -35,7 +35,6 @@ const createScene = function () {
 
     const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 4000000, height: 4000000 }, scene);
     ground.checkCollisions = true;
-
     const groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
     groundMaterial.alpha = 0;
     ground.material = groundMaterial;
@@ -49,13 +48,12 @@ const createScene = function () {
         box.position.x = (i - 2) * 5;
         box.position.y = 1;
         box.checkCollisions = true;
-
         const redMaterial = new BABYLON.StandardMaterial("redMat" + i, scene);
         redMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
         box.material = redMaterial;
     }
 
-    // Salto
+    // Salto desktop
     let isJumping = false;
     let jumpVelocity = 0;
     const jumpForce = 0.5;
@@ -70,7 +68,6 @@ const createScene = function () {
 
             const ray = new BABYLON.Ray(camera.position, new BABYLON.Vector3(0, -1, 0), 10);
             const hit = scene.pickWithRay(ray, (mesh) => mesh.checkCollisions && mesh.name !== "player");
-
             const landingHeight = hit.hit ? hit.pickedPoint.y + 3 : baseGroundHeight;
 
             if (camera.position.y <= landingHeight) {
@@ -89,9 +86,59 @@ const createScene = function () {
         }
     });
 
+    // ✅ WebXR — si attiva solo se il browser/dispositivo lo supporta
+    const xrSupported = await BABYLON.WebXRSessionManager.IsSessionSupportedAsync("immersive-vr");
+
+    if (xrSupported) {
+        const xrHelper = await scene.createDefaultXRExperienceAsync({
+            floorMeshes: [ground],
+            disableTeleportation: true, // ✅ niente teleportazione, solo thumbstick
+            optionalFeatures: true
+        });
+
+        // ✅ Movimento continuo con thumbstick sinistro
+        const featureManager = xrHelper.baseExperience.featuresManager;
+
+        featureManager.enableFeature(
+            BABYLON.WebXRFeatureName.MOVEMENT,
+            "latest",
+            {
+                xrInput: xrHelper.input,
+                movementSpeed: 0.15,
+                rotationSpeed: 0.25,
+                movementOrientationFollowsViewerPose: true // direzione = dove guardi
+            }
+        );
+
+        console.log("✅ WebXR attivo — modalità Quest");
+
+        // ✅ Salto con tasto A del controller destro
+        xrHelper.input.onControllerAddedObservable.add((controller) => {
+            controller.onMotionControllerInitObservable.add((motionController) => {
+                if (motionController.handness === "right") {
+                    const aButton = motionController.getComponent("a-button");
+                    if (aButton) {
+                        aButton.onButtonStateChangedObservable.add((state) => {
+                            if (state.pressed && !isJumping) {
+                                isJumping = true;
+                                jumpVelocity = jumpForce;
+                            }
+                        });
+                    }
+                }
+            });
+        });
+
+    } else {
+        console.log("ℹ️ WebXR non supportato — modalità desktop attiva");
+    }
+
     return scene;
 };
 
-const scene = createScene();
-engine.runRenderLoop(() => scene.render());
+// ✅ async per WebXR
+createScene().then((scene) => {
+    engine.runRenderLoop(() => scene.render());
+});
+
 window.addEventListener("resize", () => engine.resize());
