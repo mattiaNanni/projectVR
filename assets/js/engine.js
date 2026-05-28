@@ -81,12 +81,22 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
             xrInput: xrHelper.input,
             movementSpeed: 0.15,
             rotationSpeed: 0.25,
-            movementOrientationFollowsViewerPose: true,
+            movementOrientationFollowsViewerPose: false,
             // thumbstick sinistro = movimento, destro = rotazione
-            movementAxesGlTFToXR: [0, 1],   // asse X e Y del thumbstick sinistro
-            rotationAxesGlTFToXR: [2, 3]    // asse X e Y del thumbstick destro
+            movementAxesGlTFToXR: [2, 3],   // asse X e Y del thumbstick sinistro
+            rotationAxesGlTFToXR: [0, 1]    // asse X e Y del thumbstick destro
         }
     );
+
+    // ✅ Gravità manuale in WebXR — applica gravità alla camera XR ogni frame
+    scene.onBeforeRenderObservable.add(() => {
+        const xrCamera = xrHelper.baseExperience.camera;
+        if (!isJumpingRef.value) {
+            // Sposta la camera XR verso il basso simulando la gravità
+            const currentPosition = xrHelper.baseExperience.sessionManager.worldScalingFactor;
+            xrCamera.position.y = Math.max(xrCamera.position.y - 0.05, 3); // 3 = altezza minima dal suolo
+        }
+    });
 
     console.log("✅ WebXR attivo — modalità Quest");
 
