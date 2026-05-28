@@ -1,4 +1,4 @@
-import { initEngine, initCamera, initJump, initWebXR } from "./engine.js";
+import { initEngine, initCamera, initJump, initWebXR, createPortal } from "./engine.js";
 
 const { canvas, engine } = initEngine("renderCanvas");
 
@@ -49,9 +49,10 @@ const createScene = async function () {
 
     // WebXR per Quest
     await initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, jumpForce);
-
+    createPortal(scene, camera, "scena2.html", new BABYLON.Vector3(0, 3, 5));
     return scene;
 };
+
 
 createScene().then((scene) => {
     engine.runRenderLoop(() => scene.render());

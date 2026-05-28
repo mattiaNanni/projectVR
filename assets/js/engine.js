@@ -10,6 +10,51 @@ export function initEngine(canvasId) {
     return { canvas, engine };
 }
 
+export function createPortal(scene, camera, targetUrl, position = new BABYLON.Vector3(0, 3, 5)) {
+    console.log("✅ portale creato a posizione:", position);
+    // Anello 3D del portale
+    const portal = BABYLON.MeshBuilder.CreateTorus("portal", {
+        diameter: 4,
+        thickness: 0.3,
+        tessellation: 32
+    }, scene);
+    portal.position = position;
+    portal.rotation.x = Math.PI / 2; // verticale
+
+    // Materiale luminoso
+    const portalMaterial = new BABYLON.StandardMaterial("portalMat", scene);
+    portalMaterial.diffuseColor = new BABYLON.Color3(0, 0.8, 1);
+    portalMaterial.emissiveColor = new BABYLON.Color3(0, 0.8, 1); // effetto glow
+    portal.material = portalMaterial;
+
+    // Disco interno semitrasparente
+    const disc = BABYLON.MeshBuilder.CreateDisc("portalDisc", { radius: 1.9, tessellation: 32 }, scene);
+    disc.position = position.clone();
+    disc.rotation.x = Math.PI / 2;
+    const discMaterial = new BABYLON.StandardMaterial("discMat", scene);
+    discMaterial.diffuseColor = new BABYLON.Color3(0, 0.5, 1);
+    discMaterial.emissiveColor = new BABYLON.Color3(0, 0.3, 0.8);
+    discMaterial.alpha = 0.5;
+    disc.material = discMaterial;
+
+    // Rotazione animata dell'anello
+    scene.onBeforeRenderObservable.add(() => {
+        portal.rotation.y += 0.01;
+    });
+
+    // Trigger: se la camera entra nel raggio del portale → cambia pagina
+    scene.onBeforeRenderObservable.add(() => {
+        const dx = camera.position.x - portal.position.x;
+        const dz = camera.position.z - portal.position.z;
+        const horizontalDistance = Math.sqrt(dx * dx + dz * dz);
+        if (horizontalDistance < 2) {
+            window.location.href = targetUrl;
+        }
+    });
+
+    return portal;
+}
+
 export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, jumpForce) {
     const xrSupported = await BABYLON.WebXRSessionManager.IsSessionSupportedAsync("immersive-vr");
 
