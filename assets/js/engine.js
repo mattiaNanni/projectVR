@@ -157,3 +157,92 @@ export function initJump(scene, camera) {
 
     return { isJumpingRef, jumpVelocityRef, jumpForce };
 }
+
+export function createInfoPanel(scene, position = new BABYLON.Vector3(0, 4, 5), content = []) {
+    // Piano su cui viene proiettata la GUI
+    const panel = BABYLON.MeshBuilder.CreatePlane("infoPanel", { width: 6, height: 4 }, scene);
+    panel.position = position;
+    panel.billboardMode = BABYLON.Mesh.BILLBOARDMODE_NONE;
+
+    // Texture dinamica su cui disegniamo testo e righe
+    const texture = new BABYLON.DynamicTexture("panelTexture", { width: 1024, height: 682 }, scene);
+    const ctx = texture.getContext();
+
+    // Sfondo
+    ctx.fillStyle = "#1a1a2e";
+    ctx.fillRect(0, 0, 1024, 682);
+
+    // Bordo
+    ctx.strokeStyle = "#00cfff";
+    ctx.lineWidth = 6;
+    ctx.strokeRect(10, 10, 1004, 662);
+
+    // Titolo
+    ctx.fillStyle = "#00cfff";
+    ctx.font = "bold 52px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(content.title || "Titolo", 512, 80);
+
+    // Linea separatrice titolo
+    ctx.strokeStyle = "#00cfff";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(40, 105);
+    ctx.lineTo(984, 105);
+    ctx.stroke();
+
+    // Intestazioni colonne
+    const colX = [80, 400, 750];
+    ctx.fillStyle = "#aad4f5";
+    ctx.font = "bold 36px Arial";
+    ctx.textAlign = "left";
+    const headers = content.headers || [];
+    headers.forEach((h, i) => {
+        ctx.fillText(h, colX[i] || 80 + i * 300, 155);
+    });
+
+    // Linea separatrice intestazioni
+    ctx.strokeStyle = "#aad4f5";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(40, 175);
+    ctx.lineTo(984, 175);
+    ctx.stroke();
+
+    // Righe dati
+    const rows = content.rows || [];
+    rows.forEach((row, rowIndex) => {
+        const y = 230 + rowIndex * 70;
+
+        // Sfondo alternato
+        if (rowIndex % 2 === 0) {
+            ctx.fillStyle = "rgba(0, 100, 150, 0.2)";
+            ctx.fillRect(20, y - 40, 984, 65);
+        }
+
+        // Testo celle
+        ctx.fillStyle = "#ffffff";
+        ctx.font = "32px Arial";
+        row.forEach((cell, colIndex) => {
+            ctx.fillText(String(cell), colX[colIndex] || 80 + colIndex * 300, y);
+        });
+
+        // Linea separatrice riga
+        ctx.strokeStyle = "rgba(0, 207, 255, 0.2)";
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(40, y + 25);
+        ctx.lineTo(984, y + 25);
+        ctx.stroke();
+    });
+
+    texture.update();
+
+    const material = new BABYLON.StandardMaterial("panelMat", scene);
+    material.diffuseTexture = texture;
+    material.emissiveTexture = texture; // visibile anche senza luce diretta
+    material.backFaceCulling = false;   // visibile da entrambi i lati
+    panel.material = material;
+
+    return panel;
+}

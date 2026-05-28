@@ -1,4 +1,4 @@
-import { initEngine, initCamera, initJump, initWebXR, createPortal } from "./engine.js";
+import { initEngine, initCamera, initJump, initWebXR, createPortal, createInfoPanel } from "./engine.js";
 
 const { canvas, engine } = initEngine("renderCanvas");
 
@@ -50,7 +50,21 @@ const createScene = async function () {
     // WebXR per Quest
     await initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, jumpForce);
     createPortal(scene, camera, "scena2.html", new BABYLON.Vector3(0, 3, 5));
+    
+    createInfoPanel(scene, new BABYLON.Vector3(0, 4, 8), {
+    title: "Tabella Siti Archeologici",
+    headers: ["Sito", "Periodo", "Posizione"],
+    rows: [
+        ["Pompei",       "79 d.C.",     "Italia"],
+        ["Machu Picchu", "1450 d.C.",   "Perù"],
+        ["Stonehenge",   "3000 a.C.",   "UK"],
+        ["Colosseo",     "70 d.C.",     "Roma"],
+        ["Angkor Wat",   "1100 d.C.",   "Cambogia"],
+    ]
+});
+    
     return scene;
+    
 };
 
 
