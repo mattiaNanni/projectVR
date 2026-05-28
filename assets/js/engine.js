@@ -21,6 +21,8 @@ export function createPortal(scene, camera, targetUrl, position = new BABYLON.Ve
     portal.position = position;
     portal.rotation.x = Math.PI / 2; // verticale
 
+    portal.metadata = targetUrl;
+
     // Materiale luminoso
     const portalMaterial = new BABYLON.StandardMaterial("portalMat", scene);
     portalMaterial.diffuseColor = new BABYLON.Color3(0, 0.8, 1);
@@ -58,46 +60,79 @@ export function createPortal(scene, camera, targetUrl, position = new BABYLON.Ve
 export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, jumpForce) {
     const xrSupported = await BABYLON.WebXRSessionManager.IsSessionSupportedAsync("immersive-vr");
 
-    if (xrSupported) {
-        const xrHelper = await scene.createDefaultXRExperienceAsync({
-            floorMeshes: [ground],
-            disableTeleportation: true,
-            optionalFeatures: true
-        });
+    if (!xrSupported) {
+        console.log("ℹ️ WebXR non supportato — modalità desktop attiva");
+        return null;
+    }
 
-        const featureManager = xrHelper.baseExperience.featuresManager;
-        featureManager.enableFeature(
-            BABYLON.WebXRFeatureName.MOVEMENT,
-            "latest",
-            {
-                xrInput: xrHelper.input,
-                movementSpeed: 0.15,
-                rotationSpeed: 0.25,
-                movementOrientationFollowsViewerPose: true
+    const xrHelper = await scene.createDefaultXRExperienceAsync({
+        floorMeshes: [ground],
+        disableTeleportation: true,
+        optionalFeatures: true
+    });
+
+    const featureManager = xrHelper.baseExperience.featuresManager;
+
+    // ✅ Movimento thumbstick sinistro + rotazione thumbstick destro
+    featureManager.enableFeature(
+        BABYLON.WebXRFeatureName.MOVEMENT,
+        "latest",
+        {
+            xrInput: xrHelper.input,
+            movementSpeed: 0.15,
+            rotationSpeed: 0.25,
+            movementOrientationFollowsViewerPose: true,
+            // thumbstick sinistro = movimento, destro = rotazione
+            movementAxesGlTFToXR: [0, 1],   // asse X e Y del thumbstick sinistro
+            rotationAxesGlTFToXR: [2, 3]    // asse X e Y del thumbstick destro
+        }
+    );
+
+    console.log("✅ WebXR attivo — modalità Quest");
+
+    // ✅ Salto con tasto A controller destro
+    xrHelper.input.onControllerAddedObservable.add((controller) => {
+        controller.onMotionControllerInitObservable.add((motionController) => {
+            if (motionController.handness === "right") {
+                const aButton = motionController.getComponent("a-button");
+                if (aButton) {
+                    aButton.onButtonStateChangedObservable.add((state) => {
+                        if (state.pressed && !isJumpingRef.value) {
+                            isJumpingRef.value = true;
+                            jumpVelocityRef.value = jumpForce;
+                        }
+                    });
+                }
             }
-        );
+        });
+    });
 
-        console.log("✅ WebXR attivo — modalità Quest");
+    // ✅ Portale funzionante in WebXR — controlla posizione headset invece della camera desktop
+    xrHelper.baseExperience.onStateChangedObservable.add((state) => {
+        if (state === BABYLON.WebXRState.IN_XR) {
+            scene.onBeforeRenderObservable.add(() => {
+                // In WebXR la posizione reale è nel camera rig di XR
+                const xrCamera = xrHelper.baseExperience.camera;
+                const xrPos = xrCamera.globalPosition;
 
-        xrHelper.input.onControllerAddedObservable.add((controller) => {
-            controller.onMotionControllerInitObservable.add((motionController) => {
-                if (motionController.handness === "right") {
-                    const aButton = motionController.getComponent("a-button");
-                    if (aButton) {
-                        aButton.onButtonStateChangedObservable.add((state) => {
-                            if (state.pressed && !isJumpingRef.value) {
-                                isJumpingRef.value = true;
-                                jumpVelocityRef.value = jumpForce;
-                            }
+                // Cerca tutti i portali nella scena e controlla la distanza
+                const portalMesh = scene.getMeshByName("portal");
+                if (portalMesh) {
+                    const dx = xrPos.x - portalMesh.position.x;
+                    const dz = xrPos.z - portalMesh.position.z;
+                    const dist = Math.sqrt(dx * dx + dz * dz);
+                    if (dist < 2) {
+                        // ✅ In WebXR bisogna uscire dalla sessione prima di navigare
+                        xrHelper.baseExperience.exitXRAsync().then(() => {
+                            window.location.href = portalMesh.metadata;
                         });
                     }
                 }
             });
-        });
+        }
+    });
 
-    } else {
-        console.log("ℹ️ WebXR non supportato — modalità desktop attiva");
-    }
+    return xrHelper;
 }
 
 export function initCamera(scene, canvas) {
