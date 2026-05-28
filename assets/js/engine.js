@@ -81,7 +81,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
             xrInput: xrHelper.input,
             movementSpeed: 0.15,
             rotationSpeed: 0.25,
-            movementOrientationFollowsViewerPose: false,
+            movementOrientationFollowsViewerPose: true,
             // thumbstick sinistro = movimento, destro = rotazione
             movementAxesGlTFToXR: [2, 3],   // asse X e Y del thumbstick sinistro
             rotationAxesGlTFToXR: [0, 1]    // asse X e Y del thumbstick destro
@@ -101,6 +101,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
             isJumpingRef.value = false;
             jumpVelocityRef.value = 0;
         }
+        
     } else {
         // ✅ Gravità — scende fino all'altezza minima
         xrCamera.position.y = Math.max(xrCamera.position.y - 0.05, 3);
