@@ -83,8 +83,8 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
             rotationSpeed: 0.25,
             movementOrientationFollowsViewerPose: true,
             // thumbstick sinistro = movimento, destro = rotazione
-            movementAxesGlTFToXR: [0, 1],   // asse X e Y del thumbstick sinistro
-            rotationAxesGlTFToXR: [2, 3]    // asse X e Y del thumbstick destro
+            movementSourceComponentType: "thumbstick", 
+            rotationSourceComponentType: "thumbstick",
         }
     );
 
