@@ -64,7 +64,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
     console.log("✅ WebXR attivo — modalità Quest");
 
     // ✅ Movimento manuale: stick sinistro = muovi, stick destro = ruota visuale
-    // ✅ Movimento manuale con collisioni
+ // ✅ Movimento manuale con collisioni corpo intero
 scene.onBeforeRenderObservable.add(() => {
     if (!xrHelper.input || !xrHelper.input.controllers) return;
 
@@ -85,63 +85,84 @@ scene.onBeforeRenderObservable.add(() => {
                 forward.normalize();
                 const right = BABYLON.Vector3.Cross(BABYLON.Vector3.Up(), forward).normalize();
 
-                // Vettore movimento desiderato
                 const moveDir = forward.scale(-axisY).add(right.scale(axisX));
                 if (moveDir.length() < 0.01) continue;
                 moveDir.normalize();
 
                 const moveSpeed = 0.1;
-                const collisionDistance = 0.8; // distanza minima dagli ostacoli
+                const collisionDistance = 0.6;
 
-                // ✅ Raycast in direzione del movimento — controlla ostacoli
-                const ray = new BABYLON.Ray(
-                    xrCamera.position.clone(),
-                    moveDir,
-                    collisionDistance
-                );
+                // ✅ Altezze dei raggi — simulano il corpo dall'alto al basso
+                const rayHeights = [
+                    xrCamera.position.y,        // testa
+                    xrCamera.position.y - 0.5,  // petto
+                    xrCamera.position.y - 1.0,  // vita
+                    xrCamera.position.y - 1.5,  // gambe
+                    xrCamera.position.y - 2.5,  // piedi
+                ];
 
-                const hit = scene.pickWithRay(ray, (mesh) => {
-                    return mesh.checkCollisions === true &&
-                           mesh.name !== "ground" &&
-                           mesh.name !== "portal" &&
-                           mesh.name !== "portalDisc";
-                });
+                let blocked = false;
+                let slideNormal = null;
 
-                if (!hit.hit) {
-                    // ✅ Nessun ostacolo — muovi liberamente
+                const meshFilter = (mesh) =>
+                    mesh.checkCollisions === true &&
+                    mesh.name !== "ground" &&
+                    !mesh.name.startsWith("portal");
+
+                // ✅ Controlla collisioni a tutte le altezze del corpo
+                for (const height of rayHeights) {
+                    const origin = new BABYLON.Vector3(
+                        xrCamera.position.x,
+                        height,
+                        xrCamera.position.z
+                    );
+                    const ray = new BABYLON.Ray(origin, moveDir, collisionDistance);
+                    const hit = scene.pickWithRay(ray, meshFilter);
+
+                    if (hit.hit) {
+                        blocked = true;
+                        const normal = hit.getNormal(true);
+                        if (normal) {
+                            normal.y = 0;
+                            normal.normalize();
+                            slideNormal = normal;
+                        }
+                        break;
+                    }
+                }
+
+                if (!blocked) {
+                    // ✅ Nessun ostacolo — movimento libero
                     xrCamera.position.addInPlace(moveDir.scale(moveSpeed));
-                } else {
-                    // ✅ Ostacolo rilevato — prova a scorrere lungo la parete
-                    // Componente del movimento perpendicolare all'ostacolo
-                    const normal = hit.getNormal(true) || BABYLON.Vector3.Zero();
-                    normal.y = 0;
-                    normal.normalize();
-
+                } else if (slideNormal) {
+                    // ✅ Ostacolo — scivola lungo la parete
                     const slide = moveDir.subtract(
-                        normal.scale(BABYLON.Vector3.Dot(moveDir, normal))
+                        slideNormal.scale(BABYLON.Vector3.Dot(moveDir, slideNormal))
                     );
                     slide.y = 0;
 
                     if (slide.length() > 0.01) {
                         slide.normalize();
-                        // Raycast nella direzione di scorrimento
-                        const slideRay = new BABYLON.Ray(
-                            xrCamera.position.clone(),
-                            slide,
-                            collisionDistance
-                        );
-                        const slideHit = scene.pickWithRay(slideRay, (mesh) => {
-                            return mesh.checkCollisions === true &&
-                                   mesh.name !== "ground" &&
-                                   mesh.name !== "portal" &&
-                                   mesh.name !== "portalDisc";
-                        });
 
-                        if (!slideHit.hit) {
-                            // ✅ Scorrimento libero lungo la parete
+                        // Controlla che anche la direzione di scorrimento sia libera
+                        let slideBlocked = false;
+                        for (const height of rayHeights) {
+                            const origin = new BABYLON.Vector3(
+                                xrCamera.position.x,
+                                height,
+                                xrCamera.position.z
+                            );
+                            const slideRay = new BABYLON.Ray(origin, slide, collisionDistance);
+                            const slideHit = scene.pickWithRay(slideRay, meshFilter);
+                            if (slideHit.hit) {
+                                slideBlocked = true;
+                                break;
+                            }
+                        }
+
+                        if (!slideBlocked) {
                             xrCamera.position.addInPlace(slide.scale(moveSpeed * 0.7));
                         }
-                        // ✅ Se anche lo scorrimento è bloccato — fermo
                     }
                 }
             }
