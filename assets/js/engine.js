@@ -88,33 +88,34 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         }
     );
 
-    xrHelper.input.onControllerAddedObservable.add((controller) => {
-        controller.onMotionControllerInitObservable.add((motionController) => {
-            console.log("Controller:", motionController.handness);
-            motionController.getComponentIds().forEach(id => {
-                console.log("Componente:", id);
-            });
-        });
-    });
-
     // ✅ Gravità manuale in WebXR — applica gravità alla camera XR ogni frame
+    let lastValidY = null;
     scene.onBeforeRenderObservable.add(() => {
         const xrCamera = xrHelper.baseExperience.camera;
 
+        // Inizializza lastValidY al primo frame in XR
+        if (lastValidY === null) {
+            lastValidY = xrCamera.position.y;
+        }
+
         if (isJumpingRef.value) {
-        // ✅ Salto in WebXR — muove la camera XR
+        // il salto gestisce l'asse y
         xrCamera.position.y += jumpVelocityRef.value;
         jumpVelocityRef.value += -0.012;
 
         if (xrCamera.position.y <= 3) {
             xrCamera.position.y = 3;
+            lastValidY = 3;
             isJumpingRef.value = false;
             jumpVelocityRef.value = 0;
+        } else {
+            lastValidY = xrCamera.position.y;
         }
         
     } else {
         // ✅ Gravità — scende fino all'altezza minima
         xrCamera.position.y = Math.max(xrCamera.position.y - 0.05, 3);
+        lastValidY = xrCamera.position.y;
     }
     });
 
