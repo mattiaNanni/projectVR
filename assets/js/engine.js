@@ -1,3 +1,5 @@
+// engine.js — setup base riutilizzabile
+
 export function initEngine(canvasId) {
     const canvas = document.getElementById(canvasId);
     const engine = new BABYLON.Engine(canvas, true);
@@ -33,7 +35,6 @@ export function createPortal(scene, camera, targetUrl, position = new BABYLON.Ve
         portal.rotation.y += 0.01;
     });
 
-    // Trigger desktop
     scene.onBeforeRenderObservable.add(() => {
         const dx = camera.position.x - portal.position.x;
         const dz = camera.position.z - portal.position.z;
@@ -60,26 +61,49 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         optionalFeatures: true
     });
 
-    const featureManager = xrHelper.baseExperience.featuresManager;
-
-    featureManager.enableFeature(
-        BABYLON.WebXRFeatureName.MOVEMENT,
-        "latest",
-        {
-            xrInput: xrHelper.input,
-            movementSpeed: 0.15,
-            rotationSpeed: 0.25,
-            movementOrientationFollowsViewerPose: false,
-            movementEnabled: true,
-            rotationEnabled: true,
-            movementAxesGlTFToXR: [2, 3],  // assi del controller sinistro
-            rotationAxesGlTFToXR: [0, 1],  // assi del controller destro
-        }
-    );
-
     console.log("✅ WebXR attivo — modalità Quest");
 
-    // Gravità + salto + blocco asse Y
+    // ✅ Movimento manuale: stick sinistro = muovi, stick destro = ruota visuale
+    scene.onBeforeRenderObservable.add(() => {
+        if (!xrHelper.input || !xrHelper.input.controllers) return;
+
+        for (const controller of xrHelper.input.controllers) {
+            const mc = controller.motionController;
+            if (!mc) continue;
+
+            if (mc.handness === "left") {
+                // ✅ Stick sinistro = movimento orizzontale
+                const thumbstick = mc.getComponent("xr-standard-thumbstick");
+                if (thumbstick && thumbstick.axes) {
+                    const axisX = thumbstick.axes.x || 0;
+                    const axisY = thumbstick.axes.y || 0;
+
+                    const xrCamera = xrHelper.baseExperience.camera;
+
+                    // Direzione orizzontale della camera (ignora Y)
+                    const forward = xrCamera.getForwardRay().direction.clone();
+                    forward.y = 0;
+                    forward.normalize();
+                    const right = BABYLON.Vector3.Cross(BABYLON.Vector3.Up(), forward).normalize();
+
+                    // Sposta la camera solo su X e Z
+                    xrCamera.position.addInPlace(forward.scale(-axisY * 0.1));
+                    xrCamera.position.addInPlace(right.scale(axisX * 0.1));
+                }
+            }
+
+            if (mc.handness === "right") {
+                // ✅ Stick destro = rotazione visuale orizzontale
+                const thumbstick = mc.getComponent("xr-standard-thumbstick");
+                if (thumbstick && thumbstick.axes) {
+                    const axisX = thumbstick.axes.x || 0;
+                    xrHelper.baseExperience.camera.rotation.y += axisX * 0.03;
+                }
+            }
+        }
+    });
+
+    // ✅ Blocco asse Y — gravità e salto
     scene.onAfterRenderObservable.add(() => {
         const xrCamera = xrHelper.baseExperience.camera;
         const currentX = xrCamera.position.x;
@@ -101,7 +125,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         xrCamera.position.z = currentZ;
     });
 
-    // Salto con tasto A controller destro
+    // ✅ Salto con tasto A controller destro
     xrHelper.input.onControllerAddedObservable.add((controller) => {
         controller.onMotionControllerInitObservable.add((motionController) => {
             if (motionController.handness === "right") {
@@ -118,7 +142,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         });
     });
 
-    // Portale in WebXR
+    // ✅ Portale in WebXR
     xrHelper.baseExperience.onStateChangedObservable.add((state) => {
         if (state === BABYLON.WebXRState.IN_XR) {
             scene.onBeforeRenderObservable.add(() => {
