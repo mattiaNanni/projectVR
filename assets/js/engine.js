@@ -82,7 +82,9 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
             rotationSpeed: 0.25,
             // ✅ FALSE — non seguire la testa sull'asse verticale
             movementOrientationFollowsViewerPose: false,
-            movementSourceComponentType: "thumbstick",
+            movementEnabled:true,
+            rotationEnabled = false,
+            movementAxes: { hand: "left", axes: [0, 1] },
         }
     );
 

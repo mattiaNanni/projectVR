@@ -1,4 +1,4 @@
-import { initEngine, initCamera, initJump, initWebXR,createPortal } from "./engine.js?v=3";
+import { initEngine, initCamera, initJump, initWebXR,createPortal } from "./engine.js?v=4";
 
 const { canvas, engine } = initEngine("renderCanvas");
 
