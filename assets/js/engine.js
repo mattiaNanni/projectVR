@@ -89,7 +89,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
     console.log("✅ WebXR attivo — modalità Quest");
 
     // ✅ Gravità + blocco asse Y — sovrascrive ogni frame
-    scene.onBeforeRenderObservable.add(() => {
+    scene.onAfterRenderObservable.add(() => {
         const xrCamera = xrHelper.baseExperience.camera;
 
         if (isJumpingRef.value) {
