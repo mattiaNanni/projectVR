@@ -34,6 +34,14 @@ const createScene = async function () {
 
 
 
-createScene().then((scene) => {
+createScene().then(async (scene) => {
     engine.runRenderLoop(() => scene.render());
+
+    // ✅ Rientra automaticamente in WebXR se venivi da un portale
+    if (sessionStorage.getItem("wasInXR") === "true") {
+        const xrHelper = scene.metadata?.xrHelper;
+        if (xrHelper) {
+            await xrHelper.baseExperience.enterXRAsync("immersive-vr", "local-floor");
+        }
+    }
 });

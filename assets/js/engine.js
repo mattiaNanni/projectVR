@@ -83,14 +83,24 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
             rotationSpeed: 0.25,
             movementOrientationFollowsViewerPose: true,
             // thumbstick sinistro = movimento, destro = rotazione
-            movementAxesGlTFToXR: [2, 3],   // asse X e Y del thumbstick sinistro
-            rotationAxesGlTFToXR: [0, 1]    // asse X e Y del thumbstick destro
+            movementAxesGlTFToXR: [0, 1],   // asse X e Y del thumbstick sinistro
+            //rotationAxesGlTFToXR: [2, 3]    // asse X e Y del thumbstick destro
         }
     );
+
+    xrHelper.input.onControllerAddedObservable.add((controller) => {
+        controller.onMotionControllerInitObservable.add((motionController) => {
+            console.log("Controller:", motionController.handness);
+            motionController.getComponentIds().forEach(id => {
+                console.log("Componente:", id);
+            });
+        });
+    });
 
     // ✅ Gravità manuale in WebXR — applica gravità alla camera XR ogni frame
     scene.onBeforeRenderObservable.add(() => {
         const xrCamera = xrHelper.baseExperience.camera;
+
         if (isJumpingRef.value) {
         // ✅ Salto in WebXR — muove la camera XR
         xrCamera.position.y += jumpVelocityRef.value;
@@ -128,8 +138,13 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
     });
 
     // ✅ Portale funzionante in WebXR — controlla posizione headset invece della camera desktop
+    scene.metadata = scene.metadata || {};
+    scene.metadata.xrHelper = xrHelper;
+    
     xrHelper.baseExperience.onStateChangedObservable.add((state) => {
         if (state === BABYLON.WebXRState.IN_XR) {
+            sessionStorage.setItem("wasInXR", "true");
+
             scene.onBeforeRenderObservable.add(() => {
                 // In WebXR la posizione reale è nel camera rig di XR
                 const xrCamera = xrHelper.baseExperience.camera;
@@ -142,14 +157,17 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
                     const dz = xrPos.z - portalMesh.position.z;
                     const dist = Math.sqrt(dx * dx + dz * dz);
                     if (dist < 2) {
-                        // ✅ In WebXR bisogna uscire dalla sessione prima di navigare
-                        xrHelper.baseExperience.exitXRAsync().then(() => {
-                            window.location.href = portalMesh.metadata;
-                        });
+                        // ✅ Naviga senza exitXRAsync — la sessione resta attiva
+                        window.location.href = portalMesh.metadata;
                     }
                 }
             });
         }
+
+        if (state === BABYLON.WebXRState.NOT_IN_XR) {
+            sessionStorage.setItem("wasInXR", "false");
+        }
+        
     });
 
     return xrHelper;
