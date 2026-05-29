@@ -84,7 +84,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
             movementOrientationFollowsViewerPose: true,
             // thumbstick sinistro = movimento, destro = rotazione
             movementAxesGlTFToXR: [0, 1],   // asse X e Y del thumbstick sinistro
-            //rotationAxesGlTFToXR: [2, 3]    // asse X e Y del thumbstick destro
+            rotationAxesGlTFToXR: [2, 3]    // asse X e Y del thumbstick destro
         }
     );
 
@@ -167,7 +167,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         if (state === BABYLON.WebXRState.NOT_IN_XR) {
             sessionStorage.setItem("wasInXR", "false");
         }
-        
+
     });
 
     return xrHelper;
