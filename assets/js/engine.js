@@ -64,44 +64,98 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
     console.log("✅ WebXR attivo — modalità Quest");
 
     // ✅ Movimento manuale: stick sinistro = muovi, stick destro = ruota visuale
-    scene.onBeforeRenderObservable.add(() => {
-        if (!xrHelper.input || !xrHelper.input.controllers) return;
+    // ✅ Movimento manuale con collisioni
+scene.onBeforeRenderObservable.add(() => {
+    if (!xrHelper.input || !xrHelper.input.controllers) return;
 
-        for (const controller of xrHelper.input.controllers) {
-            const mc = controller.motionController;
-            if (!mc) continue;
+    const xrCamera = xrHelper.baseExperience.camera;
 
-            if (mc.handness === "left") {
-                // ✅ Stick sinistro = movimento orizzontale
-                const thumbstick = mc.getComponent("xr-standard-thumbstick");
-                if (thumbstick && thumbstick.axes) {
-                    const axisX = thumbstick.axes.x || 0;
-                    const axisY = thumbstick.axes.y || 0;
+    for (const controller of xrHelper.input.controllers) {
+        const mc = controller.motionController;
+        if (!mc) continue;
 
-                    const xrCamera = xrHelper.baseExperience.camera;
+        if (mc.handness === "left") {
+            const thumbstick = mc.getComponent("xr-standard-thumbstick");
+            if (thumbstick && thumbstick.axes) {
+                const axisX = thumbstick.axes.x || 0;
+                const axisY = thumbstick.axes.y || 0;
 
-                    // Direzione orizzontale della camera (ignora Y)
-                    const forward = xrCamera.getForwardRay().direction.clone();
-                    forward.y = 0;
-                    forward.normalize();
-                    const right = BABYLON.Vector3.Cross(BABYLON.Vector3.Up(), forward).normalize();
+                const forward = xrCamera.getForwardRay().direction.clone();
+                forward.y = 0;
+                forward.normalize();
+                const right = BABYLON.Vector3.Cross(BABYLON.Vector3.Up(), forward).normalize();
 
-                    // Sposta la camera solo su X e Z
-                    xrCamera.position.addInPlace(forward.scale(-axisY * 0.1));
-                    xrCamera.position.addInPlace(right.scale(axisX * 0.1));
-                }
-            }
+                // Vettore movimento desiderato
+                const moveDir = forward.scale(-axisY).add(right.scale(axisX));
+                if (moveDir.length() < 0.01) continue;
+                moveDir.normalize();
 
-            if (mc.handness === "right") {
-                // ✅ Stick destro = rotazione visuale orizzontale
-                const thumbstick = mc.getComponent("xr-standard-thumbstick");
-                if (thumbstick && thumbstick.axes) {
-                    const axisX = thumbstick.axes.x || 0;
-                    xrHelper.baseExperience.camera.rotation.y += axisX * 0.03;
+                const moveSpeed = 0.1;
+                const collisionDistance = 0.8; // distanza minima dagli ostacoli
+
+                // ✅ Raycast in direzione del movimento — controlla ostacoli
+                const ray = new BABYLON.Ray(
+                    xrCamera.position.clone(),
+                    moveDir,
+                    collisionDistance
+                );
+
+                const hit = scene.pickWithRay(ray, (mesh) => {
+                    return mesh.checkCollisions === true &&
+                           mesh.name !== "ground" &&
+                           mesh.name !== "portal" &&
+                           mesh.name !== "portalDisc";
+                });
+
+                if (!hit.hit) {
+                    // ✅ Nessun ostacolo — muovi liberamente
+                    xrCamera.position.addInPlace(moveDir.scale(moveSpeed));
+                } else {
+                    // ✅ Ostacolo rilevato — prova a scorrere lungo la parete
+                    // Componente del movimento perpendicolare all'ostacolo
+                    const normal = hit.getNormal(true) || BABYLON.Vector3.Zero();
+                    normal.y = 0;
+                    normal.normalize();
+
+                    const slide = moveDir.subtract(
+                        normal.scale(BABYLON.Vector3.Dot(moveDir, normal))
+                    );
+                    slide.y = 0;
+
+                    if (slide.length() > 0.01) {
+                        slide.normalize();
+                        // Raycast nella direzione di scorrimento
+                        const slideRay = new BABYLON.Ray(
+                            xrCamera.position.clone(),
+                            slide,
+                            collisionDistance
+                        );
+                        const slideHit = scene.pickWithRay(slideRay, (mesh) => {
+                            return mesh.checkCollisions === true &&
+                                   mesh.name !== "ground" &&
+                                   mesh.name !== "portal" &&
+                                   mesh.name !== "portalDisc";
+                        });
+
+                        if (!slideHit.hit) {
+                            // ✅ Scorrimento libero lungo la parete
+                            xrCamera.position.addInPlace(slide.scale(moveSpeed * 0.7));
+                        }
+                        // ✅ Se anche lo scorrimento è bloccato — fermo
+                    }
                 }
             }
         }
-    });
+
+        if (mc.handness === "right") {
+            const thumbstick = mc.getComponent("xr-standard-thumbstick");
+            if (thumbstick && thumbstick.axes) {
+                const axisX = thumbstick.axes.x || 0;
+                xrCamera.rotation.y += axisX * 0.03;
+            }
+        }
+    }
+});
 
     // ✅ Blocco asse Y — gravità e salto
     scene.onAfterRenderObservable.add(() => {
