@@ -63,137 +63,154 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
 
     console.log("✅ WebXR attivo — modalità Quest");
 
-    // ✅ Movimento manuale: stick sinistro = muovi, stick destro = ruota visuale
- // ✅ Movimento manuale con collisioni corpo intero
-scene.onBeforeRenderObservable.add(() => {
-    if (!xrHelper.input || !xrHelper.input.controllers) return;
+    // ✅ Movimento manuale con collisioni corpo intero (5 raggi orizzontali)
+    scene.onBeforeRenderObservable.add(() => {
+        if (!xrHelper.input || !xrHelper.input.controllers) return;
 
-    const xrCamera = xrHelper.baseExperience.camera;
+        const xrCamera = xrHelper.baseExperience.camera;
 
-    for (const controller of xrHelper.input.controllers) {
-        const mc = controller.motionController;
-        if (!mc) continue;
+        for (const controller of xrHelper.input.controllers) {
+            const mc = controller.motionController;
+            if (!mc) continue;
 
-        if (mc.handness === "left") {
-            const thumbstick = mc.getComponent("xr-standard-thumbstick");
-            if (thumbstick && thumbstick.axes) {
-                const axisX = thumbstick.axes.x || 0;
-                const axisY = thumbstick.axes.y || 0;
+            if (mc.handness === "left") {
+                const thumbstick = mc.getComponent("xr-standard-thumbstick");
+                if (thumbstick && thumbstick.axes) {
+                    const axisX = thumbstick.axes.x || 0;
+                    const axisY = thumbstick.axes.y || 0;
 
-                const forward = xrCamera.getForwardRay().direction.clone();
-                forward.y = 0;
-                forward.normalize();
-                const right = BABYLON.Vector3.Cross(BABYLON.Vector3.Up(), forward).normalize();
+                    const forward = xrCamera.getForwardRay().direction.clone();
+                    forward.y = 0;
+                    forward.normalize();
+                    const right = BABYLON.Vector3.Cross(BABYLON.Vector3.Up(), forward).normalize();
 
-                const moveDir = forward.scale(-axisY).add(right.scale(axisX));
-                if (moveDir.length() < 0.01) continue;
-                moveDir.normalize();
+                    const moveDir = forward.scale(-axisY).add(right.scale(axisX));
+                    if (moveDir.length() < 0.01) continue;
+                    moveDir.normalize();
 
-                const moveSpeed = 0.1;
-                const collisionDistance = 0.6;
+                    const moveSpeed = 0.1;
+                    const collisionDistance = 0.6;
 
-                // ✅ Altezze dei raggi — simulano il corpo dall'alto al basso
-                const rayHeights = [
-                    xrCamera.position.y,        // testa
-                    xrCamera.position.y - 0.5,  // petto
-                    xrCamera.position.y - 1.0,  // vita
-                    xrCamera.position.y - 1.5,  // gambe
-                    xrCamera.position.y - 2.5,  // piedi
-                ];
+                    // ✅ 5 raggi a diverse altezze — simulano il corpo
+                    const rayHeights = [
+                        xrCamera.position.y,        // testa
+                        xrCamera.position.y - 0.5,  // petto
+                        xrCamera.position.y - 1.0,  // vita
+                        xrCamera.position.y - 1.5,  // gambe
+                        xrCamera.position.y - 2.5,  // piedi
+                    ];
 
-                let blocked = false;
-                let slideNormal = null;
+                    let blocked = false;
+                    let slideNormal = null;
 
-                const meshFilter = (mesh) =>
-                    mesh.checkCollisions === true &&
-                    mesh.name !== "ground" &&
-                    !mesh.name.startsWith("portal");
+                    const meshFilter = (mesh) =>
+                        mesh.checkCollisions === true &&
+                        mesh.name !== "ground" &&
+                        !mesh.name.startsWith("portal");
 
-                // ✅ Controlla collisioni a tutte le altezze del corpo
-                for (const height of rayHeights) {
-                    const origin = new BABYLON.Vector3(
-                        xrCamera.position.x,
-                        height,
-                        xrCamera.position.z
-                    );
-                    const ray = new BABYLON.Ray(origin, moveDir, collisionDistance);
-                    const hit = scene.pickWithRay(ray, meshFilter);
+                    // Controlla collisioni a tutte le altezze del corpo
+                    for (const height of rayHeights) {
+                        const origin = new BABYLON.Vector3(
+                            xrCamera.position.x,
+                            height,
+                            xrCamera.position.z
+                        );
+                        const ray = new BABYLON.Ray(origin, moveDir, collisionDistance);
+                        const hit = scene.pickWithRay(ray, meshFilter);
 
-                    if (hit.hit) {
-                        blocked = true;
-                        const normal = hit.getNormal(true);
-                        if (normal) {
-                            normal.y = 0;
-                            normal.normalize();
-                            slideNormal = normal;
+                        if (hit.hit) {
+                            blocked = true;
+                            const normal = hit.getNormal(true);
+                            if (normal) {
+                                normal.y = 0;
+                                normal.normalize();
+                                slideNormal = normal;
+                            }
+                            break;
                         }
-                        break;
                     }
-                }
 
-                if (!blocked) {
-                    // ✅ Nessun ostacolo — movimento libero
-                    xrCamera.position.addInPlace(moveDir.scale(moveSpeed));
-                } else if (slideNormal) {
-                    // ✅ Ostacolo — scivola lungo la parete
-                    const slide = moveDir.subtract(
-                        slideNormal.scale(BABYLON.Vector3.Dot(moveDir, slideNormal))
-                    );
-                    slide.y = 0;
+                    if (!blocked) {
+                        // Nessun ostacolo — movimento libero
+                        xrCamera.position.addInPlace(moveDir.scale(moveSpeed));
+                    } else if (slideNormal) {
+                        // Ostacolo — scivola lungo la parete
+                        const slide = moveDir.subtract(
+                            slideNormal.scale(BABYLON.Vector3.Dot(moveDir, slideNormal))
+                        );
+                        slide.y = 0;
 
-                    if (slide.length() > 0.01) {
-                        slide.normalize();
+                        if (slide.length() > 0.01) {
+                            slide.normalize();
 
-                        // Controlla che anche la direzione di scorrimento sia libera
-                        let slideBlocked = false;
-                        for (const height of rayHeights) {
-                            const origin = new BABYLON.Vector3(
-                                xrCamera.position.x,
-                                height,
-                                xrCamera.position.z
-                            );
-                            const slideRay = new BABYLON.Ray(origin, slide, collisionDistance);
-                            const slideHit = scene.pickWithRay(slideRay, meshFilter);
-                            if (slideHit.hit) {
-                                slideBlocked = true;
-                                break;
+                            let slideBlocked = false;
+                            for (const height of rayHeights) {
+                                const origin = new BABYLON.Vector3(
+                                    xrCamera.position.x,
+                                    height,
+                                    xrCamera.position.z
+                                );
+                                const slideRay = new BABYLON.Ray(origin, slide, collisionDistance);
+                                const slideHit = scene.pickWithRay(slideRay, meshFilter);
+                                if (slideHit.hit) {
+                                    slideBlocked = true;
+                                    break;
+                                }
+                            }
+
+                            if (!slideBlocked) {
+                                xrCamera.position.addInPlace(slide.scale(moveSpeed * 0.7));
                             }
                         }
-
-                        if (!slideBlocked) {
-                            xrCamera.position.addInPlace(slide.scale(moveSpeed * 0.7));
-                        }
                     }
                 }
             }
-        }
 
-        if (mc.handness === "right") {
-            const thumbstick = mc.getComponent("xr-standard-thumbstick");
-            if (thumbstick && thumbstick.axes) {
-                const axisX = thumbstick.axes.x || 0;
-                xrCamera.rotation.y += axisX * 0.03;
+            if (mc.handness === "right") {
+                const thumbstick = mc.getComponent("xr-standard-thumbstick");
+                if (thumbstick && thumbstick.axes) {
+                    const axisX = thumbstick.axes.x || 0;
+                    xrCamera.rotation.y += axisX * 0.03;
+                }
             }
         }
-    }
-});
+    });
 
-    // ✅ Blocco asse Y — gravità e salto
+    // ✅ Gravità + salto + rilevamento superficie sotto i piedi
     scene.onAfterRenderObservable.add(() => {
         const xrCamera = xrHelper.baseExperience.camera;
         const currentX = xrCamera.position.x;
         const currentZ = xrCamera.position.z;
 
+        // Raycast verso il basso — rileva su cosa siamo sopra
+        const downRay = new BABYLON.Ray(
+            new BABYLON.Vector3(xrCamera.position.x, xrCamera.position.y, xrCamera.position.z),
+            new BABYLON.Vector3(0, -1, 0),
+            10
+        );
+        const downHit = scene.pickWithRay(downRay, (mesh) =>
+            mesh.checkCollisions === true &&
+            !mesh.name.startsWith("portal")
+        );
+
+        // Altezza minima = superficie sotto + altezza corpo
+        const floorHeight = downHit.hit ? downHit.pickedPoint.y + 3 : 3;
+
         if (isJumpingRef.value) {
             xrCamera.position.y += jumpVelocityRef.value;
             jumpVelocityRef.value += -0.012;
-            if (xrCamera.position.y <= 3) {
-                xrCamera.position.y = 3;
+
+            if (xrCamera.position.y <= floorHeight) {
+                xrCamera.position.y = floorHeight;
                 isJumpingRef.value = false;
                 jumpVelocityRef.value = 0;
             }
         } else {
-            xrCamera.position.y = 3;
+            if (xrCamera.position.y > floorHeight) {
+                xrCamera.position.y = Math.max(xrCamera.position.y - 0.05, floorHeight);
+            } else {
+                xrCamera.position.y = floorHeight;
+            }
         }
 
         xrCamera.position.x = currentX;
