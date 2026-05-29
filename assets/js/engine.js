@@ -73,7 +73,6 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
 
     const featureManager = xrHelper.baseExperience.featuresManager;
 
-    // ✅ Movimento thumbstick sinistro + rotazione thumbstick destro
     featureManager.enableFeature(
         BABYLON.WebXRFeatureName.MOVEMENT,
         "latest",
@@ -81,45 +80,32 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
             xrInput: xrHelper.input,
             movementSpeed: 0.15,
             rotationSpeed: 0.25,
-            movementOrientationFollowsViewerPose: true,
-            // thumbstick sinistro = movimento, destro = rotazione
-            movementSourceComponentType: "thumbstick", 
-            //rotationSourceComponentType: "thumbstick",
+            // ✅ FALSE — non seguire la testa sull'asse verticale
+            movementOrientationFollowsViewerPose: false,
+            movementSourceComponentType: "thumbstick",
         }
     );
 
-    // ✅ Gravità manuale in WebXR — applica gravità alla camera XR ogni frame
-    let lastValidY = null;
+    console.log("✅ WebXR attivo — modalità Quest");
+
+    // ✅ Gravità + blocco asse Y — sovrascrive ogni frame
     scene.onBeforeRenderObservable.add(() => {
         const xrCamera = xrHelper.baseExperience.camera;
 
-        // Inizializza lastValidY al primo frame in XR
-        if (lastValidY === null) {
-            lastValidY = xrCamera.position.y;
-        }
-
         if (isJumpingRef.value) {
-        // il salto gestisce l'asse y
-        xrCamera.position.y += jumpVelocityRef.value;
-        jumpVelocityRef.value += -0.012;
+            xrCamera.position.y += jumpVelocityRef.value;
+            jumpVelocityRef.value += -0.012;
 
-        if (xrCamera.position.y <= 3) {
-            xrCamera.position.y = 3;
-            lastValidY = 3;
-            isJumpingRef.value = false;
-            jumpVelocityRef.value = 0;
+            if (xrCamera.position.y <= 3) {
+                xrCamera.position.y = 3;
+                isJumpingRef.value = false;
+                jumpVelocityRef.value = 0;
+            }
         } else {
-            lastValidY = xrCamera.position.y;
+            // ✅ Forza Y a 3 — nessun movimento verticale possibile
+            xrCamera.position.y = 3;
         }
-        
-    } else {
-        // ✅ Gravità — scende fino all'altezza minima
-        xrCamera.position.y = Math.max(xrCamera.position.y - 0.05, 3);
-        lastValidY = xrCamera.position.y;
-    }
     });
-
-    console.log("✅ WebXR attivo — modalità Quest");
 
     // ✅ Salto con tasto A controller destro
     xrHelper.input.onControllerAddedObservable.add((controller) => {
@@ -138,27 +124,24 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         });
     });
 
-    // ✅ Portale funzionante in WebXR — controlla posizione headset invece della camera desktop
+    // ✅ Portale in WebXR
     scene.metadata = scene.metadata || {};
     scene.metadata.xrHelper = xrHelper;
-    
+
     xrHelper.baseExperience.onStateChangedObservable.add((state) => {
         if (state === BABYLON.WebXRState.IN_XR) {
             sessionStorage.setItem("wasInXR", "true");
 
             scene.onBeforeRenderObservable.add(() => {
-                // In WebXR la posizione reale è nel camera rig di XR
                 const xrCamera = xrHelper.baseExperience.camera;
                 const xrPos = xrCamera.globalPosition;
 
-                // Cerca tutti i portali nella scena e controlla la distanza
                 const portalMesh = scene.getMeshByName("portal");
                 if (portalMesh) {
                     const dx = xrPos.x - portalMesh.position.x;
                     const dz = xrPos.z - portalMesh.position.z;
                     const dist = Math.sqrt(dx * dx + dz * dz);
                     if (dist < 2) {
-                        // ✅ Naviga senza exitXRAsync — la sessione resta attiva
                         window.location.href = portalMesh.metadata;
                     }
                 }
@@ -168,7 +151,6 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         if (state === BABYLON.WebXRState.NOT_IN_XR) {
             sessionStorage.setItem("wasInXR", "false");
         }
-
     });
 
     return xrHelper;
