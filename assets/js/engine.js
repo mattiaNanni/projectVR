@@ -89,10 +89,16 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
     console.log("✅ WebXR attivo — modalità Quest");
 
     // ✅ Gravità + blocco asse Y — sovrascrive ogni frame
+    // ✅ Gestione Y completamente separata per salto e gravità
     scene.onAfterRenderObservable.add(() => {
         const xrCamera = xrHelper.baseExperience.camera;
 
+        // Salva solo X e Z aggiornati dal movimento dello stick
+        const currentX = xrCamera.position.x;
+        const currentZ = xrCamera.position.z;
+
         if (isJumpingRef.value) {
+            // Durante il salto: aggiorna Y con la parabola, lascia X e Z liberi
             xrCamera.position.y += jumpVelocityRef.value;
             jumpVelocityRef.value += -0.012;
 
@@ -102,9 +108,13 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
                 jumpVelocityRef.value = 0;
             }
         } else {
-            // ✅ Forza Y a 3 — nessun movimento verticale possibile
+            // A terra: blocca Y a 3, X e Z restano quelli aggiornati dallo stick
             xrCamera.position.y = 3;
         }
+
+        // ✅ Ripristina X e Z dopo il blocco Y — movimento orizzontale sempre libero
+        xrCamera.position.x = currentX;
+        xrCamera.position.z = currentZ;
     });
 
     // ✅ Salto con tasto A controller destro
