@@ -1,4 +1,4 @@
-import { initEngine, initCamera, initJump, initWebXR, createPortal, createInfoPanel } from "./engine.js?v=4";
+import { initEngine, initCamera, initJump, initWebXR, createPortal, createInfoPanel } from "./engine.js?v=5";
 
 const { canvas, engine } = initEngine("renderCanvas");
 
@@ -7,10 +7,8 @@ const createScene = async function () {
     scene.collisionsEnabled = true;
     scene.gravity = new BABYLON.Vector3(0, -0.15, 0);
 
-    // Camera
     const camera = initCamera(scene, canvas);
 
-    // Background
     const photoDome = new BABYLON.PhotoDome(
         "testo_sfondo",
         "assets/textures/geralt.jpg",
@@ -18,22 +16,18 @@ const createScene = async function () {
         scene
     );
 
-    // Luce
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
-    // Terreno
     const ground = BABYLON.MeshBuilder.CreateGround("ground", { width: 4000000, height: 4000000 }, scene);
     ground.checkCollisions = true;
     const groundMaterial = new BABYLON.StandardMaterial("groundMat", scene);
     groundMaterial.alpha = 0;
     ground.material = groundMaterial;
 
-    // Sfera
     const sphere = BABYLON.MeshBuilder.CreateSphere("sphere", { diameter: 2 }, scene);
     sphere.position.y = 1;
     sphere.checkCollisions = true;
 
-    // Box rossi
     for (let i = 0; i < 5; i++) {
         let box = BABYLON.MeshBuilder.CreateBox("box" + i, { size: 2 }, scene);
         box.position.x = (i - 2) * 5;
@@ -44,47 +38,28 @@ const createScene = async function () {
         box.material = redMaterial;
     }
 
-    // Salto
     const { isJumpingRef, jumpVelocityRef, jumpForce } = initJump(scene, camera);
 
-    // WebXR per Quest
     await initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, jumpForce);
+
     createPortal(scene, camera, "scena2.html", new BABYLON.Vector3(0, 3, 5));
-    
+
     createInfoPanel(scene, new BABYLON.Vector3(0, 4, 8), {
-    title: "Tabella Siti Archeologici",
-    headers: ["Sito", "Periodo", "Posizione"],
-    rows: [
-        ["Pompei",       "79 d.C.",     "Italia"],
-        ["Machu Picchu", "1450 d.C.",   "Perù"],
-        ["Stonehenge",   "3000 a.C.",   "UK"],
-        ["Colosseo",     "70 d.C.",     "Roma"],
-        ["Angkor Wat",   "1100 d.C.",   "Cambogia"],
-    ]
-});
-    
+        title: "Tabella Siti Archeologici",
+        headers: ["Sito", "Periodo", "Posizione"],
+        rows: [
+            ["Pompei",       "79 d.C.",   "Italia"],
+            ["Machu Picchu", "1450 d.C.", "Perù"],
+            ["Stonehenge",   "3000 a.C.", "UK"],
+            ["Colosseo",     "70 d.C.",   "Roma"],
+            ["Angkor Wat",   "1100 d.C.", "Cambogia"],
+        ]
+    });
+
     return scene;
-    
 };
 
-
-createScene().then(async (scene) => {
+// ✅ Semplice — niente secondo xrHelper
+createScene().then((scene) => {
     engine.runRenderLoop(() => scene.render());
-
-    // ✅ Rientra automaticamente in WebXR se venivi da un portale
-    if (sessionStorage.getItem("wasInXR") === "true") {
-        try {
-            const xrSupported = await BABYLON.WebXRSessionManager.IsSessionSupportedAsync("immersive-vr");
-            if (xrSupported) {
-                const xrHelper = await scene.createDefaultXRExperienceAsync({
-                    disableTeleportation: true,
-                    optionalFeatures: true
-                });
-                await xrHelper.baseExperience.enterXRAsync("immersive-vr", "local-floor");
-                console.log("✅ Rientrato in WebXR automaticamente");
-            }
-        } catch(e) {
-            console.error("❌ Errore rientro WebXR:", e);
-        }
-    }
 });

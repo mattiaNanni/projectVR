@@ -1,35 +1,27 @@
 // engine.js — setup base riutilizzabile
-// Importa questo file in ogni scena e chiama initEngine(canvas) per inizializzare
 
 export function initEngine(canvasId) {
     const canvas = document.getElementById(canvasId);
     const engine = new BABYLON.Engine(canvas, true);
-
     window.addEventListener("resize", () => engine.resize());
-
     return { canvas, engine };
 }
 
 export function createPortal(scene, camera, targetUrl, position = new BABYLON.Vector3(0, 3, 5)) {
-    console.log("✅ portale creato a posizione:", position);
-    // Anello 3D del portale
     const portal = BABYLON.MeshBuilder.CreateTorus("portal", {
         diameter: 4,
         thickness: 0.3,
         tessellation: 32
     }, scene);
     portal.position = position;
-    portal.rotation.x = Math.PI / 2; // verticale
-
+    portal.rotation.x = Math.PI / 2;
     portal.metadata = targetUrl;
 
-    // Materiale luminoso
     const portalMaterial = new BABYLON.StandardMaterial("portalMat", scene);
     portalMaterial.diffuseColor = new BABYLON.Color3(0, 0.8, 1);
-    portalMaterial.emissiveColor = new BABYLON.Color3(0, 0.8, 1); // effetto glow
+    portalMaterial.emissiveColor = new BABYLON.Color3(0, 0.8, 1);
     portal.material = portalMaterial;
 
-    // Disco interno semitrasparente
     const disc = BABYLON.MeshBuilder.CreateDisc("portalDisc", { radius: 1.9, tessellation: 32 }, scene);
     disc.position = position.clone();
     disc.rotation.x = Math.PI / 2;
@@ -39,12 +31,11 @@ export function createPortal(scene, camera, targetUrl, position = new BABYLON.Ve
     discMaterial.alpha = 0.5;
     disc.material = discMaterial;
 
-    // Rotazione animata dell'anello
     scene.onBeforeRenderObservable.add(() => {
         portal.rotation.y += 0.01;
     });
 
-    // Trigger: se la camera entra nel raggio del portale → cambia pagina
+    // Trigger desktop
     scene.onBeforeRenderObservable.add(() => {
         const dx = camera.position.x - portal.position.x;
         const dz = camera.position.z - portal.position.z;
@@ -78,45 +69,38 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         "latest",
         {
             xrInput: xrHelper.input,
-        movementSpeed: 0.15,
-        rotationSpeed: 0.25,
-        movementOrientationFollowsViewerPose: false,
-        movementSourceComponentType: "thumbstick",
+            movementSpeed: 0.15,
+            rotationSpeed: 0.25,
+            movementOrientationFollowsViewerPose: false,
+            movementSourceComponentType: "thumbstick",
         }
     );
 
     console.log("✅ WebXR attivo — modalità Quest");
 
-    // ✅ Gravità + blocco asse Y — sovrascrive ogni frame
-    // ✅ Gestione Y completamente separata per salto e gravità
+    // Gravità + salto + blocco asse Y
     scene.onAfterRenderObservable.add(() => {
         const xrCamera = xrHelper.baseExperience.camera;
-
-        // Salva solo X e Z aggiornati dal movimento dello stick
         const currentX = xrCamera.position.x;
         const currentZ = xrCamera.position.z;
 
         if (isJumpingRef.value) {
-            // Durante il salto: aggiorna Y con la parabola, lascia X e Z liberi
             xrCamera.position.y += jumpVelocityRef.value;
             jumpVelocityRef.value += -0.012;
-
             if (xrCamera.position.y <= 3) {
                 xrCamera.position.y = 3;
                 isJumpingRef.value = false;
                 jumpVelocityRef.value = 0;
             }
         } else {
-            // A terra: blocca Y a 3, X e Z restano quelli aggiornati dallo stick
             xrCamera.position.y = 3;
         }
 
-        // ✅ Ripristina X e Z dopo il blocco Y — movimento orizzontale sempre libero
         xrCamera.position.x = currentX;
         xrCamera.position.z = currentZ;
     });
 
-    // ✅ Salto con tasto A controller destro
+    // Salto con tasto A controller destro
     xrHelper.input.onControllerAddedObservable.add((controller) => {
         controller.onMotionControllerInitObservable.add((motionController) => {
             if (motionController.handness === "right") {
@@ -133,32 +117,21 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         });
     });
 
-    // ✅ Portale in WebXR
-    scene.metadata = scene.metadata || {};
-    scene.metadata.xrHelper = xrHelper;
-
+    // Portale in WebXR
     xrHelper.baseExperience.onStateChangedObservable.add((state) => {
         if (state === BABYLON.WebXRState.IN_XR) {
-            sessionStorage.setItem("wasInXR", "true");
-
             scene.onBeforeRenderObservable.add(() => {
                 const xrCamera = xrHelper.baseExperience.camera;
                 const xrPos = xrCamera.globalPosition;
-
                 const portalMesh = scene.getMeshByName("portal");
                 if (portalMesh) {
                     const dx = xrPos.x - portalMesh.position.x;
                     const dz = xrPos.z - portalMesh.position.z;
-                    const dist = Math.sqrt(dx * dx + dz * dz);
-                    if (dist < 2) {
+                    if (Math.sqrt(dx * dx + dz * dz) < 2) {
                         window.location.href = portalMesh.metadata;
                     }
                 }
             });
-        }
-
-        if (state === BABYLON.WebXRState.NOT_IN_XR) {
-            sessionStorage.setItem("wasInXR", "false");
         }
     });
 
@@ -167,14 +140,12 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
 
 export function initCamera(scene, canvas) {
     const camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 3, -10), scene);
-
     camera.keysUp.push(87);
     camera.keysDown.push(83);
     camera.keysLeft.push(65);
     camera.keysRight.push(68);
     camera.keysDownward.push(81);
     camera.keysUpward.push(69);
-
     camera.attachControl(canvas, true);
     camera.checkCollisions = true;
     camera.applyGravity = true;
@@ -183,7 +154,6 @@ export function initCamera(scene, canvas) {
     camera.angularSensibility = 1000;
     camera.speed = 0.2;
     camera.inertia = 0.9;
-
     return camera;
 }
 
@@ -224,31 +194,22 @@ export function initJump(scene, camera) {
 }
 
 export function createInfoPanel(scene, position = new BABYLON.Vector3(0, 4, 5), content = []) {
-    // Piano su cui viene proiettata la GUI
     const panel = BABYLON.MeshBuilder.CreatePlane("infoPanel", { width: 6, height: 4 }, scene);
     panel.position = position;
     panel.billboardMode = BABYLON.Mesh.BILLBOARDMODE_NONE;
 
-    // Texture dinamica su cui disegniamo testo e righe
     const texture = new BABYLON.DynamicTexture("panelTexture", { width: 1024, height: 682 }, scene);
     const ctx = texture.getContext();
 
-    // Sfondo
     ctx.fillStyle = "#1a1a2e";
     ctx.fillRect(0, 0, 1024, 682);
-
-    // Bordo
     ctx.strokeStyle = "#00cfff";
     ctx.lineWidth = 6;
     ctx.strokeRect(10, 10, 1004, 662);
-
-    // Titolo
     ctx.fillStyle = "#00cfff";
     ctx.font = "bold 52px Arial";
     ctx.textAlign = "center";
     ctx.fillText(content.title || "Titolo", 512, 80);
-
-    // Linea separatrice titolo
     ctx.strokeStyle = "#00cfff";
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -256,17 +217,14 @@ export function createInfoPanel(scene, position = new BABYLON.Vector3(0, 4, 5), 
     ctx.lineTo(984, 105);
     ctx.stroke();
 
-    // Intestazioni colonne
     const colX = [80, 400, 750];
     ctx.fillStyle = "#aad4f5";
     ctx.font = "bold 36px Arial";
     ctx.textAlign = "left";
-    const headers = content.headers || [];
-    headers.forEach((h, i) => {
+    (content.headers || []).forEach((h, i) => {
         ctx.fillText(h, colX[i] || 80 + i * 300, 155);
     });
 
-    // Linea separatrice intestazioni
     ctx.strokeStyle = "#aad4f5";
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -274,25 +232,17 @@ export function createInfoPanel(scene, position = new BABYLON.Vector3(0, 4, 5), 
     ctx.lineTo(984, 175);
     ctx.stroke();
 
-    // Righe dati
-    const rows = content.rows || [];
-    rows.forEach((row, rowIndex) => {
+    (content.rows || []).forEach((row, rowIndex) => {
         const y = 230 + rowIndex * 70;
-
-        // Sfondo alternato
         if (rowIndex % 2 === 0) {
             ctx.fillStyle = "rgba(0, 100, 150, 0.2)";
             ctx.fillRect(20, y - 40, 984, 65);
         }
-
-        // Testo celle
         ctx.fillStyle = "#ffffff";
         ctx.font = "32px Arial";
         row.forEach((cell, colIndex) => {
             ctx.fillText(String(cell), colX[colIndex] || 80 + colIndex * 300, y);
         });
-
-        // Linea separatrice riga
         ctx.strokeStyle = "rgba(0, 207, 255, 0.2)";
         ctx.lineWidth = 1;
         ctx.beginPath();
@@ -305,8 +255,8 @@ export function createInfoPanel(scene, position = new BABYLON.Vector3(0, 4, 5), 
 
     const material = new BABYLON.StandardMaterial("panelMat", scene);
     material.diffuseTexture = texture;
-    material.emissiveTexture = texture; // visibile anche senza luce diretta
-    material.backFaceCulling = false;   // visibile da entrambi i lati
+    material.emissiveTexture = texture;
+    material.backFaceCulling = false;
     panel.material = material;
 
     return panel;
