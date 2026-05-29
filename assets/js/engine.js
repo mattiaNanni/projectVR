@@ -1,5 +1,3 @@
-// engine.js — setup base riutilizzabile
-
 export function initEngine(canvasId) {
     const canvas = document.getElementById(canvasId);
     const engine = new BABYLON.Engine(canvas, true);
@@ -72,7 +70,10 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
             movementSpeed: 0.15,
             rotationSpeed: 0.25,
             movementOrientationFollowsViewerPose: false,
-            movementSourceComponentType: "thumbstick",
+            movementEnabled: true,
+            rotationEnabled: true,
+            movementAxesGlTFToXR: [2, 3],  // assi del controller sinistro
+            rotationAxesGlTFToXR: [0, 1],  // assi del controller destro
         }
     );
 

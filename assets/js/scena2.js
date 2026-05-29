@@ -1,4 +1,4 @@
-import { initEngine, initCamera, initJump, initWebXR,createPortal } from "./engine.js?v=4";
+import { initEngine, initCamera, initJump, initWebXR,createPortal } from "./engine.js?v=5";
 
 const { canvas, engine } = initEngine("renderCanvas");
 
@@ -36,21 +36,4 @@ const createScene = async function () {
 
 createScene().then(async (scene) => {
     engine.runRenderLoop(() => scene.render());
-
-    // ✅ Rientra automaticamente in WebXR se venivi da un portale
-    if (sessionStorage.getItem("wasInXR") === "true") {
-        try {
-            const xrSupported = await BABYLON.WebXRSessionManager.IsSessionSupportedAsync("immersive-vr");
-            if (xrSupported) {
-                const xrHelper = await scene.createDefaultXRExperienceAsync({
-                    disableTeleportation: true,
-                    optionalFeatures: true
-                });
-                await xrHelper.baseExperience.enterXRAsync("immersive-vr", "local-floor");
-                console.log("✅ Rientrato in WebXR automaticamente");
-            }
-        } catch(e) {
-            console.error("❌ Errore rientro WebXR:", e);
-        }
-    }
 });
