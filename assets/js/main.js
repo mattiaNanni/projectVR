@@ -56,6 +56,18 @@ const createScene = async function () {
         ]
     });
 
+    const ambientSound = new BABYLON.Sound(
+        "ambient",
+        "assets/audio/ambient.mp3",  // ← metti qui il path del tuo file audio
+        scene,
+        null,
+        {
+            loop: true,       // si ripete in loop
+            autoplay: true,   // parte automaticamente
+            volume: 0.1       // volume molto basso (0.0 - 1.0)
+        }
+    );
+
     return scene;
 };
 
