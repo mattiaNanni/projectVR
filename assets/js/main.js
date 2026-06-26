@@ -11,7 +11,7 @@ const createScene = async function () {
 
     const photoDome = new BABYLON.PhotoDome(
         "testo_sfondo",
-        "assets/textures/geralt.jpg",
+        "assets/textures/santuario_jpeg.jpg",
         { resolution: 32, size: 1000 },
         scene
     );
