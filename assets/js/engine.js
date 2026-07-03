@@ -274,6 +274,79 @@ export function initCamera(scene, canvas) {
     return camera;
 }
 
+export function createCoordDisplay(scene, camera, canvas) {
+    // ✅ Display coordinate HTML
+    const coordDiv = document.createElement("div");
+    coordDiv.style.cssText = `
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.6);
+        color: #00cfff;
+        font-family: monospace;
+        font-size: 14px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 1px solid #00cfff;
+        z-index: 999;
+        pointer-events: none;
+        display: none;
+    `;
+    document.body.appendChild(coordDiv);
+
+    // ✅ Pannello 3D cliccabile nella scena
+    const btnMesh = BABYLON.MeshBuilder.CreatePlane("coordBtn", { width: 2, height: 0.6 }, scene);
+    btnMesh.position = new BABYLON.Vector3(3, 2, -7); // posizione davanti alla camera
+    btnMesh.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL; // sempre rivolto verso la camera
+
+    // Texture con testo
+    const btnTexture = new BABYLON.DynamicTexture("coordBtnTex", { width: 512, height: 128 }, scene);
+    const drawButton = (active) => {
+        const ctx = btnTexture.getContext();
+        ctx.clearRect(0, 0, 512, 128);
+        ctx.fillStyle = active ? "rgba(0, 207, 255, 0.4)" : "rgba(0, 0, 0, 0.7)";
+        ctx.fillRect(0, 0, 512, 128);
+        ctx.strokeStyle = "#00cfff";
+        ctx.lineWidth = 4;
+        ctx.strokeRect(4, 4, 504, 120);
+        ctx.fillStyle = "#00cfff";
+        ctx.font = "bold 48px Arial";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("📍 Coordinate", 256, 64);
+        btnTexture.update();
+    };
+    drawButton(false);
+
+    const btnMat = new BABYLON.StandardMaterial("coordBtnMat", scene);
+    btnMat.diffuseTexture = btnTexture;
+    btnMat.emissiveTexture = btnTexture;
+    btnMat.backFaceCulling = false;
+    btnMesh.material = btnMat;
+
+    // ✅ Toggle al click sul pannello 3D
+    let visible = false;
+    scene.onPointerObservable.add((pointerInfo) => {
+        if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERPICK) {
+            if (pointerInfo.pickInfo.hit &&
+                pointerInfo.pickInfo.pickedMesh === btnMesh) {
+                visible = !visible;
+                coordDiv.style.display = visible ? "block" : "none";
+                drawButton(visible);
+            }
+        }
+    });
+
+    // ✅ Aggiorna coordinate ogni frame
+    scene.onBeforeRenderObservable.add(() => {
+        if (!visible) return;
+        const x = camera.position.x.toFixed(2);
+        const y = camera.position.y.toFixed(2);
+        const z = camera.position.z.toFixed(2);
+        coordDiv.innerHTML = `X: ${x}<br>Y: ${y}<br>Z: ${z}`;
+    });
+}
+
 export function initJump(scene, camera) {
     const isJumpingRef = { value: false };
     const jumpVelocityRef = { value: 0 };

@@ -1,4 +1,4 @@
-import { initEngine, initCamera, initJump, initWebXR, createPortal } from "./engine.js?v=10";
+import { initEngine, initCamera, initJump, initWebXR, createPortal, createCoordDisplay } from "./engine.js?v=12";
 
 const { canvas, engine } = initEngine("renderCanvas");
 
@@ -11,6 +11,7 @@ const createScene = async function () {
     scene.clearColor = new BABYLON.Color4(0.05, 0.05, 0.05, 1.0);
 
     const camera = initCamera(scene, canvas);
+    createCoordDisplay(scene, camera, canvas);
 
     // ✅ Luci
     const mainLight = new BABYLON.HemisphericLight("mainLight", new BABYLON.Vector3(0, 1, 0), scene);

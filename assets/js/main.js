@@ -1,4 +1,4 @@
-import { initEngine, initCamera, initJump, initWebXR, createPortal, createInfoPanel } from "./engine.js?v=10";
+import { initEngine, initCamera, initJump, initWebXR, createPortal, createInfoPanel, createCoordDisplay } from "./engine.js?v=12";
 
 const { canvas, engine } = initEngine("renderCanvas");
 
@@ -15,6 +15,8 @@ const createScene = async function () {
         { resolution: 32, size: 1000 },
         scene
     );
+
+    createCoordDisplay(scene, camera, canvas);
 
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
 
