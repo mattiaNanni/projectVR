@@ -12,5 +12,8 @@
   "type": "commonjs",
   "devDependencies": {
     "@babylonjs/core": "^9.7.0"
+  },
+  "dependencies": {
+    "earcut": "^3.2.3"
   }
 }

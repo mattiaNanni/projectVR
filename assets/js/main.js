@@ -44,7 +44,7 @@ const createScene = async function () {
 
     await initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, jumpForce);
 
-    createPortal(scene, camera, "scena2.html", new BABYLON.Vector3(0, 3, 5));
+    createPortal(scene, camera, "scena3.html", new BABYLON.Vector3(0, 3, 5));
 
     createInfoPanel(scene, new BABYLON.Vector3(0, 4, 8), {
         title: "Tabella Siti Archeologici",
