@@ -1,4 +1,5 @@
 import { initEngine, initCamera, initJump, initWebXR, createCoordDisplay } from "./engine.js?v=12";
+//import { tagliaVolteDentroCupola, tagliaCupolaConVaults, createSafeVault, tagliaCupolaConBox } from "./domeUtils.js";
 
 const { canvas, engine } = initEngine("renderCanvas");
 
@@ -31,20 +32,18 @@ const createScene = async function () {
 
     const light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(0, 1, 0), scene);
     light.intensity = 0.8; 
+
+    const light1 = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(110, 62, -10), scene);
+    light.intensity = 0.01; 
     
     const wallColor = new BABYLON.Color3(1, 0.9, 0.2);
     const wallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
     wallMaterial.diffuseColor = wallColor;
 
-    const redMaterial = new BABYLON.StandardMaterial("redMaterial", scene);
-    redMaterial.diffuseColor = new BABYLON.Color3(1, 0, 0);
-    const redCube = BABYLON.MeshBuilder.CreateBox("redCube", { size: 50 }, scene);
-    redCube.position = new BABYLON.Vector3(0, 100, 0);
-    redCube.material = redMaterial;
-
     const platformCollider = BABYLON.MeshBuilder.CreateGround("ground", { width: 20000, height: 20000 }, scene);
     platformCollider.checkCollisions = true;
     platformCollider.isVisible = false; 
+
 
     BABYLON.SceneLoader.ImportMeshAsync("", "assets/models/", "floor.glb", scene).then((result) => {
         const floorRoot = result.meshes[0];
@@ -145,13 +144,13 @@ const createScene = async function () {
         wallEndRightExtra.material = wallMaterial;
         wallEndRightExtra.checkCollisions = true;
 
-        const newPerpWallLeft = BABYLON.MeshBuilder.CreateBox("newPerpWallLeft", { width: 2.1, height: wallHeightBox + 1, depth: 70 }, scene);
+        const newPerpWallLeft = BABYLON.MeshBuilder.CreateBox("newPerpWallLeft", { width: 2.1, height: wallHeightBox + 100, depth: 70 }, scene);
         newPerpWallLeft.position = new BABYLON.Vector3(112, extraY, 82); // ✅ era 90, -8
         newPerpWallLeft.rotation.y = Math.PI / 2;
         newPerpWallLeft.material = wallMaterial;
         newPerpWallLeft.checkCollisions = true;
 
-        const newPerpWallRight = BABYLON.MeshBuilder.CreateBox("newPerpWallRight", { width: 2.1, height: wallHeightBox + 1, depth: 70 }, scene);
+        const newPerpWallRight = BABYLON.MeshBuilder.CreateBox("newPerpWallRight", { width: 2.1, height: wallHeightBox + 100, depth: 70 }, scene);
         newPerpWallRight.position = new BABYLON.Vector3(112, extraY, -76);
         newPerpWallRight.rotation.y = Math.PI / 2;
         newPerpWallRight.material = wallMaterial;
@@ -167,7 +166,7 @@ const createScene = async function () {
         rectWallRight2.material = wallMaterial;
         rectWallRight2.checkCollisions = true;
 
-        const wallConnector = BABYLON.MeshBuilder.CreateBox("wallConnector", { width: wallThickness, height: wallHeightBox, depth: 59 }, scene);
+        const wallConnector = BABYLON.MeshBuilder.CreateBox("wallConnector", { width: wallThickness, height: wallHeightBox+70, depth: 80 }, scene);
         wallConnector.position = new BABYLON.Vector3(-30, wallHeightBox / 2, 6.5);
         wallConnector.material = wallMaterial;
         wallConnector.checkCollisions = true;
@@ -364,10 +363,10 @@ BABYLON.SceneLoader.ImportMeshAsync("", "assets/models/", "floor.glb", scene).th
         // ✅ Muro di collegamento
         const connectorWall = BABYLON.MeshBuilder.CreateBox("connectorWall", {
             width: 0.8,
-            height: wallHeightBox + 1,
-            depth: 53.5
+            height: wallHeightBox + 100,
+            depth: 53.5 +30
         }, scene);
-        connectorWall.position = new BABYLON.Vector3(252, extraY, (28.1 + (-25.4)) / 2);
+        connectorWall.position = new BABYLON.Vector3(252, extraY, ((28.1 + (-25.4)) / 2));
         connectorWall.material = wallMaterial;
         connectorWall.checkCollisions = true;
 
@@ -522,7 +521,131 @@ BABYLON.SceneLoader.ImportMeshAsync("", "assets/models/", "floor.glb", scene).th
         );
         boxFill2.material = wallMaterial;
         boxFill2.checkCollisions = true;
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////77
 
+// ✅ Outer Z
+const vaultOuterZ = BABYLON.MeshBuilder.CreateCylinder("vaultOuterZ", {
+    height: 268, diameter: 78, tessellation: 33
+}, scene);
+vaultOuterZ.rotation.x = Math.PI / 2;
+vaultOuterZ.position = new BABYLON.Vector3(111.9, 27, 5.5);
+vaultOuterZ.computeWorldMatrix(true);
+vaultOuterZ.bakeCurrentTransformIntoVertices();
+
+// ✅ Inner Z
+const vaultInnerZ = BABYLON.MeshBuilder.CreateCylinder("vaultInnerZ", {
+    height: 269, diameter: 69, tessellation: 33
+}, scene);
+vaultInnerZ.rotation.x = Math.PI / 2;
+vaultInnerZ.position = new BABYLON.Vector3(111.9, 27, 5.5);
+vaultInnerZ.computeWorldMatrix(true);
+vaultInnerZ.bakeCurrentTransformIntoVertices();
+
+// ✅ Outer X
+const vaultOuterX = BABYLON.MeshBuilder.CreateCylinder("vaultOuterX", {
+    height: 303, diameter: 1, tessellation: 33
+}, scene);
+vaultOuterX.rotation.z = Math.PI / 2;
+vaultOuterX.scaling = new BABYLON.Vector3(77.9, 1, 29.5);
+vaultOuterX.position = new BABYLON.Vector3(99.5, 27, 2.7);
+vaultOuterX.computeWorldMatrix(true);
+vaultOuterX.bakeCurrentTransformIntoVertices();
+
+// ✅ Inner X
+const vaultInnerX = BABYLON.MeshBuilder.CreateCylinder("vaultInnerX", {
+    height: 304, diameter: 1, tessellation: 33
+}, scene);
+vaultInnerX.rotation.z = Math.PI / 2;
+vaultInnerX.scaling = new BABYLON.Vector3(73.9, 1, 25.5);
+vaultInnerX.position = new BABYLON.Vector3(99.5, 27, 2.7);
+vaultInnerX.computeWorldMatrix(true);
+vaultInnerX.bakeCurrentTransformIntoVertices();
+
+// ✅ Cupola outer e inner — create prima per usarle nel CSG dei vault
+const domeOuter = BABYLON.MeshBuilder.CreateSphere("domeOuter", {
+    diameter: 60, segments: 32
+}, scene);
+domeOuter.position = new BABYLON.Vector3(112, 55, 4);
+domeOuter.computeWorldMatrix(true);
+domeOuter.bakeCurrentTransformIntoVertices();
+
+const domeInner = BABYLON.MeshBuilder.CreateSphere("domeInner", {
+    diameter: 59.5, segments: 32
+}, scene);
+domeInner.position = new BABYLON.Vector3(112, 55, 4);
+domeInner.computeWorldMatrix(true);
+domeInner.bakeCurrentTransformIntoVertices();
+
+// ✅ Sfera piena per sottrarre dai vault (volume interno cupola)
+const domeSolid = BABYLON.MeshBuilder.CreateSphere("domeSolid", {
+    diameter: 60, segments: 32
+}, scene);
+domeSolid.position = new BABYLON.Vector3(112, 55, 4);
+domeSolid.computeWorldMatrix(true);
+domeSolid.bakeCurrentTransformIntoVertices();
+
+// ✅ CSG vault
+const outerZCSG = BABYLON.CSG.FromMesh(vaultOuterZ);
+const outerXCSG = BABYLON.CSG.FromMesh(vaultOuterX);
+const innerZCSG = BABYLON.CSG.FromMesh(vaultInnerZ);
+const innerXCSG = BABYLON.CSG.FromMesh(vaultInnerX);
+const domeSolidCSG = BABYLON.CSG.FromMesh(domeSolid);
+const outerDomeCSG = BABYLON.CSG.FromMesh(domeOuter);
+const innerDomeCSG = BABYLON.CSG.FromMesh(domeInner);
+
+// Unione outer e inner vault
+const outerUnionCSG = outerZCSG.union(outerXCSG);
+const innerUnionCSG = innerZCSG.union(innerXCSG);
+
+// Volta cava
+let voltaCSG = outerUnionCSG.subtract(innerUnionCSG);
+
+// ✅ Taglia metà inferiore vault
+const cutBoxVolta = BABYLON.MeshBuilder.CreateBox("cutBoxVolta", {
+    width: 400, height: 40, depth: 400
+}, scene);
+cutBoxVolta.position = new BABYLON.Vector3(99.5, 6, 1.5);
+cutBoxVolta.computeWorldMatrix(true);
+cutBoxVolta.bakeCurrentTransformIntoVertices();
+const cutVoltaCSG = BABYLON.CSG.FromMesh(cutBoxVolta);
+voltaCSG = voltaCSG.subtract(cutVoltaCSG);
+
+// ✅ Rimuovi dai vault la parte che entra nella cupola
+voltaCSG = voltaCSG.subtract(domeSolidCSG);
+
+const voltaFinale = voltaCSG.toMesh("voltaFinale", wallMaterial, scene);
+voltaFinale.checkCollisions = true;
+
+// ✅ Cupola cava
+let domeCavCSG = outerDomeCSG.subtract(innerDomeCSG);
+
+// ✅ Taglia metà inferiore cupola
+const domeCutBox = BABYLON.MeshBuilder.CreateBox("domeCutBox", {
+    width: 100, height: 30, depth: 100
+}, scene);
+domeCutBox.position = new BABYLON.Vector3(112, 37, 4);
+domeCutBox.computeWorldMatrix(true);
+domeCutBox.bakeCurrentTransformIntoVertices();
+const domeCutCSG = BABYLON.CSG.FromMesh(domeCutBox);
+domeCavCSG = domeCavCSG.subtract(domeCutCSG);
+
+// ✅ Rimuovi dalla cupola la parte che entra nei vault
+const outerUnionCSG2 = BABYLON.CSG.FromMesh(vaultOuterZ).union(BABYLON.CSG.FromMesh(vaultOuterX));
+domeCavCSG = domeCavCSG.subtract(outerUnionCSG2);
+
+const finalDome = domeCavCSG.toMesh("finalDome", wallMaterial, scene);
+finalDome.checkCollisions = true;
+
+// Cleanup
+vaultOuterZ.dispose();
+vaultInnerZ.dispose();
+vaultOuterX.dispose();
+vaultInnerX.dispose();
+domeOuter.dispose();
+domeInner.dispose();
+domeSolid.dispose();
+domeCutBox.dispose();
+cutBoxVolta.dispose();
     });
 
     return scene;
