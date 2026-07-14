@@ -103,9 +103,14 @@ export function createPainting(scene, position, name, imageUrl) {
     const painting = BABYLON.MeshBuilder.CreateBox(name, {
         width: 6, height: 4, depth: 0.2
     }, scene);
-    
+    painting.rotationQuaternion = null;
+    painting.position = position;
+
+    if(painting.position.z < 0) painting.rotation.z = Math.PI;
+
     painting.position = position;
     painting.checkCollisions = true;
+
 
     // Crea il materiale e carica l'immagine automaticamente
     const mat = new BABYLON.StandardMaterial("mat_" + name, scene);
@@ -119,7 +124,7 @@ export function createPainting(scene, position, name, imageUrl) {
 
 export async function placeDoors(scene, modelUrl = "assets/models/", modelName = "entrance.glb") {
     const zFront = -13;
-    const zBack = 17;
+    const zBack = 18;
     const zMid = (zFront + zBack) / 2;
     const x = -29;
     const y = 0;
@@ -158,3 +163,88 @@ export async function placeDoors(scene, modelUrl = "assets/models/", modelName =
 
 /////////////////////////////////////////////////////////////////SEPARATORE///////////////////////////////////////////////////////////////////////
 
+export async function placeColumns(scene, wallMaterial) {
+    const result = await BABYLON.SceneLoader.ImportMeshAsync("", "assets/models/", "Columns.glb", scene);
+    const firstColumnRoot = result.meshes[0];
+    firstColumnRoot.scaling = new BABYLON.Vector3(0.05, 0.08, 0.05);
+    firstColumnRoot.setEnabled(false);
+
+    const columnPositions = [];
+    for (let i = -1; i < 6; i++) {
+        const posX = -12 + i * 18;
+        columnPositions.push(posX);
+
+        const colFront = firstColumnRoot.clone("colFront_" + i);
+        colFront.position = new BABYLON.Vector3(posX, 3, 14.2);
+        colFront.setEnabled(true);
+        colFront.getChildMeshes().forEach(mesh => mesh.checkCollisions = true);
+
+        const colBack = firstColumnRoot.clone("colBack_" + i);
+        colBack.position = new BABYLON.Vector3(posX, 3, -16.8);
+        colBack.setEnabled(true);
+        colBack.getChildMeshes().forEach(mesh => mesh.checkCollisions = true);
+    }
+
+    const archBaseY = 19.3;
+    const wallHeight = 10;
+    const archDiameter = 12;
+    const colWidth = 20;
+    const shift = 3;
+
+    for (let i = 0; i < columnPositions.length - 1; i++) {
+        const midX = (columnPositions[i] + columnPositions[i + 1]) / 2;
+        const finalMidX = midX - shift;
+
+        [15, -16].forEach(zPos => {
+            const isLeft = zPos === 15;
+            const currentWallWidth = isLeft ? colWidth + 0.8 : colWidth;
+            const currentDepth = isLeft ? 20.5 : 14;
+            const finalZ = isLeft ? 25.6 : -17.3;
+
+            const wallBox = BABYLON.MeshBuilder.CreateBox("wall", {
+                width: currentWallWidth, height: wallHeight, depth: currentDepth
+            }, scene);
+            wallBox.position = new BABYLON.Vector3(finalMidX, archBaseY + wallHeight / 2, finalZ);
+
+            const currentArchDiameter = isLeft ? archDiameter + 0.8 : archDiameter;
+            const archHole = BABYLON.MeshBuilder.CreateCylinder("archHole", {
+                height: currentDepth + 0.5, diameter: currentArchDiameter
+            }, scene);
+            archHole.rotation.x = Math.PI / 2;
+            archHole.position = new BABYLON.Vector3(finalMidX, archBaseY, finalZ);
+
+            const wallCSG = BABYLON.CSG.FromMesh(wallBox);
+            const holeCSG = BABYLON.CSG.FromMesh(archHole);
+            const resultCSG = wallCSG.subtract(holeCSG);
+
+            const finalWall = resultCSG.toMesh("finalWall", wallMaterial, scene);
+            finalWall.checkCollisions = true;
+
+            wallBox.dispose();
+            archHole.dispose();
+        });
+    }
+}
+
+/////////////////////////////////////////////////////////////////SEPARATORE///////////////////////////////////////////////////////////////////////
+
+export async function placeSecondColumns(scene) {
+    const result = await BABYLON.SceneLoader.ImportMeshAsync("", "assets/models/", "Columns.glb", scene);
+    const firstColRoot2 = result.meshes[0];
+    firstColRoot2.scaling = new BABYLON.Vector3(0.05, 0.08, 0.05);
+    firstColRoot2.setEnabled(false);
+
+    for (let i = 0; i < 7; i++) {
+        const posX = 172 + i * 18;
+
+        const colFront2 = firstColRoot2.clone("colFront2_" + i);
+        colFront2.position = new BABYLON.Vector3(posX, 5, 14.2);
+        colFront2.setEnabled(true);
+        colFront2.getChildMeshes().forEach(mesh => mesh.checkCollisions = true);
+
+        const colBack2 = firstColRoot2.clone("colBack2_" + i);
+        colBack2.position = new BABYLON.Vector3(posX, 5, -16.8);
+        colBack2.setEnabled(true);
+        colBack2.getChildMeshes().forEach(mesh => mesh.checkCollisions = true);
+    }
+}
