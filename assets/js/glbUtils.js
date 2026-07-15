@@ -1,5 +1,5 @@
 export function placeAltar(scene, position = new BABYLON.Vector3(188, 6, 2), rotationY = 0, width = 4, depth = 2) {
-    // ✅ Granito stile Minecraft — grigio medio chiaro
+    // Granito stile Minecraft — grigio medio chiaro
     const graniteMat = new BABYLON.StandardMaterial("graniteMat_" + position.x, scene);
     graniteMat.diffuseColor = new BABYLON.Color3(0.6, 0.55, 0.52); // ✅ rosa/grigio caldo come il granito Minecraft
     graniteMat.specularColor = new BABYLON.Color3(0.5, 0.5, 0.5);
@@ -24,10 +24,10 @@ export function placeAltar(scene, position = new BABYLON.Vector3(188, 6, 2), rot
     graniteTexture.update();
     graniteMat.diffuseTexture = graniteTexture;
 
-    // ✅ Scala 5, altezza abbassata di 2
-    const scaledWidth = width * 2;   // ✅ era 5, ora 3
-    const scaledDepth = depth * 2;   // ✅ era 5, ora 3
-    const scaledHeight = (1.2 * 3); // ✅ scala 3 poi -3
+    //  Scala 5, altezza abbassata di 2
+    const scaledWidth = width * 2;   //  era 5, ora 3
+    const scaledDepth = depth * 2;   //  era 5, ora 3
+    const scaledHeight = (1.2 * 3); //  scala 3 poi -3
     const scaledTopHeight = (0.2 * 5) - 2 < 0.3 ? 0.3 : (0.2 * 5);
 
     const altarBase = BABYLON.MeshBuilder.CreateBox("altarBase_" + position.x, {
@@ -57,13 +57,13 @@ export async function createGlass(scene, position = new BABYLON.Vector3(-23, 42,
     
     glassRoot.position = position;
     
-    // ✅ Scala raddoppiata e rotazione 90 gradi
+    // Scala raddoppiata e rotazione 90 gradi
     glassRoot.scaling = new BABYLON.Vector3(2, 2, 2);
     glassRoot.rotationQuaternion = null;
     glassRoot.rotation.y = Math.PI / 2;
     if (glassRoot.position.x > 200) glassRoot.rotation.y = -Math.PI/2;
     
-    // ✅ Luce omnidirezionale (PointLight)
+    //  Luce omnidirezionale (PointLight)
     const glassLight = new BABYLON.PointLight("glassLight", position, scene);
     glassLight.intensity = 0.2;
     
@@ -88,4 +88,20 @@ export async function placeOrgan(scene, position = new BABYLON.Vector3(-96.4, 0,
     });
 
     return organRoot;
+}
+
+
+export async function placeWoodDoor(scene, position = new BABYLON.Vector3(29, 0, -22.79)) {
+    const result = await BABYLON.SceneLoader.ImportMeshAsync("", "assets/models/", "wood_door.glb", scene);
+    const doorRoot = result.meshes[0];
+    
+    doorRoot.position = position;
+    doorRoot.rotationQuaternion = null;
+    doorRoot.rotation.y = 0;
+    
+    doorRoot.getChildMeshes().forEach(mesh => {
+        mesh.checkCollisions = true;
+    });
+
+    return doorRoot;
 }

@@ -4,9 +4,12 @@ import {
   initJump,
   initWebXR,
   createCoordDisplay,
+  createPortal
 } from "./engine.js?v=12";
-import { createPainting, generateComplexVaultsAndDome, placeDoors, placeColumns, placeSecondColumns } from "./Utils.js";
-import { placeAltar, createGlass, placeOrgan } from "./glbUtils.js";
+import { createPainting, generateComplexVaultsAndDome, placeDoors, placeColumns, placeSecondColumns } from "./Utils.js?=v4";
+import { placeAltar, createGlass, placeOrgan, placeWoodDoor  } from "./glbUtils.js?v=4";
+import { placeInfoBoards } from "./placeTxt.js?v=4";
+import { placeInfoImages } from "./imgUtils.js?v=5";
 
 const { canvas, engine } = initEngine("renderCanvas");
 
@@ -67,10 +70,10 @@ const createScene = async function () {
     }
   });
 
-  // ✅ Colonne originali
+  //Colonne 
   await placeColumns(scene, wallMaterial);
 
-  // ✅ Variabili condivise — definite fuori dal .then()
+
   const wallHeightBox = 29;
   const wallThickness = 0.3;
   const sharedWallLength = 117;
@@ -81,7 +84,7 @@ const createScene = async function () {
   const colWidth = 20;
   const shift = 3;
 
-  // ✅ Muri
+  // Muri
   const wallLeft = BABYLON.MeshBuilder.CreateBox("wallLeft", { width: sharedWallLength, height: wallHeightBox, depth: wallThickness }, scene);
   wallLeft.position = new BABYLON.Vector3(wallXCenter, wallHeightBox / 2, 28);
   wallLeft.material = wallMaterial;
@@ -139,7 +142,7 @@ const createScene = async function () {
   wallEndRightExtra2.material = wallMaterial;
   wallEndRightExtra2.checkCollisions = true;
 
-  // ✅ Materiale marmo
+  //  Materiale marmo
   const marmoMat = new BABYLON.StandardMaterial("marmoMat", scene);
   marmoMat.diffuseColor = new BABYLON.Color3(0.9, 0.88, 0.84);
   marmoMat.specularColor = new BABYLON.Color3(0.4, 0.4, 0.4);
@@ -160,7 +163,7 @@ const createScene = async function () {
   marmoTexture.update();
   marmoMat.diffuseTexture = marmoTexture;
 
-  // ✅ Scale
+  //  Scale
   const totalSteps = 5;
   const totalHeight = 3;
   const startX = 146;
@@ -181,7 +184,7 @@ const createScene = async function () {
     box.material = marmoMat;
   }
 
-  // ✅ Materiale marmo grigio
+  //  Materiale marmo grigio
   const grayMarmoMat = new BABYLON.StandardMaterial("grayMarmoMat", scene);
   grayMarmoMat.diffuseColor = new BABYLON.Color3(0.5, 0.5, 0.5);
   grayMarmoMat.specularColor = new BABYLON.Color3(0.4, 0.4, 0.4);
@@ -202,7 +205,7 @@ const createScene = async function () {
   grayMarmoTexture.update();
   grayMarmoMat.diffuseTexture = grayMarmoTexture;
 
-  // ✅ Esagoni
+  // Esagoni
   const hexagon = BABYLON.MeshBuilder.CreateCylinder("hexagon", { height: 7, diameter: 8, tessellation: 6 }, scene);
   hexagon.position = new BABYLON.Vector3(147, 2.5, 14);
   hexagon.checkCollisions = true;
@@ -213,7 +216,7 @@ const createScene = async function () {
   hexagonMirror.checkCollisions = true;
   hexagonMirror.material = grayMarmoMat;
 
-  // ✅ Pavimento rialzato GLB
+  //  Pavimento rialzato GLB
   BABYLON.SceneLoader.ImportMeshAsync("", "assets/models/", "floor.glb", scene).then((result) => {
     const raisedFloor = result.meshes[0];
     raisedFloor.scaling = new BABYLON.Vector3(19, 0.5, 19);
@@ -226,7 +229,7 @@ const createScene = async function () {
   raisedFloorCollider.isVisible = false;
   raisedFloorCollider.checkCollisions = true;
 
-  // ✅ Scale centrali
+  //  Scale centrali
   for (let s = 0; s < totalSteps; s++) {
     const h = (s + 1) * (totalHeight / totalSteps);
     const box = BABYLON.MeshBuilder.CreateBox("stepCenter_" + s, { width: 1, height: h, depth: 20 }, scene);
@@ -235,7 +238,7 @@ const createScene = async function () {
     box.material = marmoMat;
   }
 
-  // ✅ Scale laterali Z negativo
+  //  Scale laterali Z negativo
   const totalStepsSide = 10;
   const totalHeightSide = 4;
   const startZ = -36;
@@ -249,7 +252,7 @@ const createScene = async function () {
     box.material = marmoMat;
   }
 
-  // ✅ Pavimento laterale GLB
+  // Pavimento laterale GLB
   BABYLON.SceneLoader.ImportMeshAsync("", "assets/models/", "floor.glb", scene).then((result) => {
     const sideFloor = result.meshes[0];
     sideFloor.scaling = new BABYLON.Vector3(5, 0.5, 5);
@@ -262,7 +265,7 @@ const createScene = async function () {
   sideFloorCollider.isVisible = false;
   sideFloorCollider.checkCollisions = true;
 
-  // ✅ Muri perpendicolari
+  //  Muri perpendicolari
   const perpWallTop = BABYLON.MeshBuilder.CreateBox("perpWallTop", { width: 104, height: wallHeightBox + 1, depth: wallThickness + 0.2 }, scene);
   perpWallTop.position = new BABYLON.Vector3(148 + 104 / 2, extraY, 28.1);
   perpWallTop.material = wallMaterial;
@@ -278,7 +281,7 @@ const createScene = async function () {
   connectorWall.material = wallMaterial;
   connectorWall.checkCollisions = true;
 
-  // ✅ Colonne replicate
+  //  Colonne replicate
   await BABYLON.SceneLoader.ImportMeshAsync("", "assets/models/", "Columns.glb", scene).then((result) => {
     const firstColRoot2 = result.meshes[0];
     firstColRoot2.scaling = new BABYLON.Vector3(0.05, 0.08, 0.05);
@@ -299,7 +302,7 @@ const createScene = async function () {
     }
   });
 
-  // ✅ Archi per le nuove colonne
+  //  Archi per le nuove colonne
   const archBaseY2 = 22;
   const newColumnPositions = [];
   for (let i = 0; i < 7; i++) {
@@ -335,10 +338,10 @@ const createScene = async function () {
     });
   }
 
-  // ✅ Riempimento spazi vuoti
+  //  Riempimento spazi vuoti
   await placeSecondColumns(scene);
 
-  // ✅ Gap fill
+  //  Gap fill
   const gapFill = BABYLON.MeshBuilder.CreateBox("gapFill", { width: 19, height: wallHeightBox, depth: wallThickness + 0.2 }, scene);
   gapFill.position = new BABYLON.Vector3(148 + 19 / 2, wallHeightBox / 2, 28.1);
   gapFill.material = wallMaterial;
@@ -359,10 +362,10 @@ const createScene = async function () {
   boxFill2.material = wallMaterial;
   boxFill2.checkCollisions = true;
 
-  // ✅ Vault e cupola
+  //  Vault e cupola
   generateComplexVaultsAndDome(scene, domeMaterial);
 
-  // ✅ Quadri
+  //  Quadri
   const gallery = [
     { pos: new BABYLON.Vector3(-8, 12, -22), img: "/assets/img/dipinto1.png" },
     { pos: new BABYLON.Vector3(13, 12, -22), img: "/assets/img/dipinto1.png" },
@@ -376,28 +379,33 @@ const createScene = async function () {
   });
 
 
-  // ✅ Porte
+  //  Porte
   placeDoors(scene);
 
-  // ✅ Altare originale
+  // Altare originale
   placeAltar(scene, new BABYLON.Vector3(168, 3, 2), Math.PI / 2, 4, 2);
 
-  // ✅ Secondo altare
+  //  Secondo altare
   placeAltar(scene, new BABYLON.Vector3(110, 4, -65), Math.PI / 2, 4, 5);
 
   // vetro superiore
   await createGlass(scene, new BABYLON.Vector3(-23, 42, 10.3));
   await createGlass(scene, new BABYLON.Vector3(245, 42, -5.3));
 
-  // ✅ Salto e WebXR
+  //  Salto e WebXR
   const { isJumpingRef, jumpVelocityRef, jumpForce } = initJump(scene, camera);
   await initWebXR(scene, platformCollider, isJumpingRef, jumpVelocityRef, jumpForce);
 
- // ✅ Luce omnidirezionale (PointLight)
-const omniLight = new BABYLON.PointLight("omniLight", new BABYLON.Vector3(118, 81, 6), scene);
-omniLight.intensity = 0.3;
+// Luce omnidirezionale (PointLight)
+  const omniLight = new BABYLON.PointLight("omniLight", new BABYLON.Vector3(118, 81, 6), scene);
+  omniLight.intensity = 0.3;
 
-await placeOrgan(scene);
+  await placeOrgan(scene);
+  await placeWoodDoor(scene);
+  placeInfoBoards(scene);
+  placeInfoImages(scene);
+
+  createPortal(scene, camera, "index.html", new BABYLON.Vector3(-17, 3, 2));
 
   return scene;
 };

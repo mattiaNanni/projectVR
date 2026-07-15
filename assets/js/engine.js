@@ -51,7 +51,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
     const xrSupported = await BABYLON.WebXRSessionManager.IsSessionSupportedAsync("immersive-vr");
 
     if (!xrSupported) {
-        console.log("ℹ️ WebXR non supportato — modalità desktop attiva");
+        console.log("WebXR non supportato — modalità desktop attiva");
         return null;
     }
 
@@ -61,9 +61,9 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         optionalFeatures: true
     });
 
-    console.log("✅ WebXR attivo — modalità Quest");
+    console.log("WebXR attivo — modalità Quest");
 
-    // ✅ Movimento manuale con collisioni corpo intero (5 raggi orizzontali)
+    //  Movimento manuale con collisioni corpo intero (5 raggi orizzontali)
     scene.onBeforeRenderObservable.add(() => {
         if (!xrHelper.input || !xrHelper.input.controllers) return;
 
@@ -91,7 +91,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
                     const moveSpeed = 0.1;
                     const collisionDistance = 0.6;
 
-                    // ✅ 5 raggi a diverse altezze — simulano il corpo
+                    //  5 raggi a diverse altezze — simulano il corpo
                     const rayHeights = [
                         xrCamera.position.y,        // testa
                         xrCamera.position.y - 0.5,  // petto
@@ -176,7 +176,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         }
     });
 
-    // ✅ Gravità + salto + rilevamento superficie sotto i piedi
+    // Gravità + salto + rilevamento superficie sotto i piedi
     scene.onAfterRenderObservable.add(() => {
         const xrCamera = xrHelper.baseExperience.camera;
         const currentX = xrCamera.position.x;
@@ -217,7 +217,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         xrCamera.position.z = currentZ;
     });
 
-    // ✅ Salto con tasto A controller destro
+    // Salto con tasto A controller destro
     xrHelper.input.onControllerAddedObservable.add((controller) => {
         controller.onMotionControllerInitObservable.add((motionController) => {
             if (motionController.handness === "right") {
@@ -234,7 +234,7 @@ export async function initWebXR(scene, ground, isJumpingRef, jumpVelocityRef, ju
         });
     });
 
-    // ✅ Portale in WebXR
+    // Portale in WebXR
     xrHelper.baseExperience.onStateChangedObservable.add((state) => {
         if (state === BABYLON.WebXRState.IN_XR) {
             scene.onBeforeRenderObservable.add(() => {
@@ -275,7 +275,7 @@ export function initCamera(scene, canvas) {
 }
 
 export function createCoordDisplay(scene, camera, canvas) {
-    // ✅ Display coordinate HTML
+    //  Display coordinate HTML
     const coordDiv = document.createElement("div");
     coordDiv.style.cssText = `
         position: fixed;
@@ -294,7 +294,7 @@ export function createCoordDisplay(scene, camera, canvas) {
     `;
     document.body.appendChild(coordDiv);
 
-    // ✅ Pannello 3D cliccabile nella scena
+    //  Pannello 3D cliccabile nella scena
     const btnMesh = BABYLON.MeshBuilder.CreatePlane("coordBtn", { width: 2, height: 0.6 }, scene);
     btnMesh.position = new BABYLON.Vector3(3, 2, -7); // posizione davanti alla camera
     btnMesh.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL; // sempre rivolto verso la camera
@@ -324,7 +324,7 @@ export function createCoordDisplay(scene, camera, canvas) {
     btnMat.backFaceCulling = false;
     btnMesh.material = btnMat;
 
-    // ✅ Toggle al click sul pannello 3D
+    // Toggle al click sul pannello 3D
     let visible = false;
     scene.onPointerObservable.add((pointerInfo) => {
         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERPICK) {
@@ -337,7 +337,7 @@ export function createCoordDisplay(scene, camera, canvas) {
         }
     });
 
-    // ✅ Aggiorna coordinate ogni frame
+    // Aggiorna coordinate ogni frame
     scene.onBeforeRenderObservable.add(() => {
         if (!visible) return;
         const x = camera.position.x.toFixed(2);
