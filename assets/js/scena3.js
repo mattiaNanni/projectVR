@@ -49,12 +49,12 @@ const createScene = async function () {
   // --- WALL MATERIAL ---
   const wallColor = new BABYLON.Color3(0.96, 0.82, 0.35);
   const wallMaterial = new BABYLON.StandardMaterial("wallMaterial", scene);
-  wallMaterial.diffuseTexture = new BABYLON.Texture("/assets/textures/paint.jpg", scene);
+  wallMaterial.diffuseTexture = new BABYLON.Texture("assets/textures/paint.jpg", scene);
   wallMaterial.diffuseColor = wallColor;
 
   // --- DOME MATERIAL ---
   const domeMaterial = new BABYLON.StandardMaterial("domeMaterial", scene);
-  domeMaterial.diffuseTexture = new BABYLON.Texture("/assets/textures/paint.jpg", scene);
+  domeMaterial.diffuseTexture = new BABYLON.Texture("assets/textures/paint.jpg", scene);
   domeMaterial.diffuseColor = new BABYLON.Color3(0.96, 0.94, 0.85);
 
   const platformCollider = BABYLON.MeshBuilder.CreateGround("ground", { width: 20000, height: 20000 }, scene);
