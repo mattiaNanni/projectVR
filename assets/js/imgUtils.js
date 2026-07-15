@@ -2,13 +2,13 @@ export function placeInfoImages(scene, imageList = null) {
 
     // Se non vengono passate immagini, usa una lista predefinita
     const defaultImages = [
-        { position: new BABYLON.Vector3(29, 3, 2), url: "/assets/img/ingresso.png" },
-        { position: new BABYLON.Vector3(131, 3, -22), url: "/assets/img/statua_madonna.jpg" },
-        { position: new BABYLON.Vector3(141, 3, 2), url: "/assets/img/altare.png" },
-        { position: new BABYLON.Vector3(164, 7, 21), url: "/assets/img/cripta.png" },
-        { position: new BABYLON.Vector3(85, 3, 45), url: "/assets/img/organo.png" },
-        { position: new BABYLON.Vector3(92, 3, 11), url: "/assets/img/corridoio.png" },
-        { position: new BABYLON.Vector3(183, 7, 10), url: "/assets/img/sala_fagiolo.jpg" }
+        { position: new BABYLON.Vector3(29, 3, 2), url: "assets/img/ingresso.png" },
+        { position: new BABYLON.Vector3(131, 3, -22), url: "assets/img/statua_madonna.jpg" },
+        { position: new BABYLON.Vector3(141, 3, 2), url: "assets/img/altare.png" },
+        { position: new BABYLON.Vector3(164, 7, 21), url: "assets/img/cripta.png" },
+        { position: new BABYLON.Vector3(85, 3, 45), url: "assets/img/organo.png" },
+        { position: new BABYLON.Vector3(92, 3, 11), url: "assets/img/corridoio.png" },
+        { position: new BABYLON.Vector3(183, 7, 10), url: "assets/img/sala_fagiolo.jpg" }
     ];
 
     const images = imageList || defaultImages;

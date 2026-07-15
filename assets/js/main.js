@@ -74,9 +74,9 @@ const mieiTesti = [
 placeInfoBoards(scene, mieiTesti);
 
 const mieImmagini = [
-    { position: new BABYLON.Vector3(20, 3, -8), url: "/assets/img/affresco.jpg" },
-    { position: new BABYLON.Vector3(11, 3, -28), url: "/assets/img/chiesaNotturna.jpg" },
-    { position: new BABYLON.Vector3(-4, 3, -25), url: "/assets/img/vecchia_chiesa.jpg" }
+    { position: new BABYLON.Vector3(20, 3, -8), url: "assets/img/affresco.jpg" },
+    { position: new BABYLON.Vector3(11, 3, -28), url: "assets/img/chiesaNotturna.jpg" },
+    { position: new BABYLON.Vector3(-4, 3, -25), url: "assets/img/vecchia_chiesa.jpg" }
 ];
 
 // ✅ Chiamata alla funzione per piazzare le immagini

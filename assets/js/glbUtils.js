@@ -1,13 +1,13 @@
 export function placeAltar(scene, position = new BABYLON.Vector3(188, 6, 2), rotationY = 0, width = 4, depth = 2) {
-    // Granito stile Minecraft — grigio medio chiaro
+
     const graniteMat = new BABYLON.StandardMaterial("graniteMat_" + position.x, scene);
-    graniteMat.diffuseColor = new BABYLON.Color3(0.6, 0.55, 0.52); // ✅ rosa/grigio caldo come il granito Minecraft
+    graniteMat.diffuseColor = new BABYLON.Color3(0.6, 0.55, 0.52); 
     graniteMat.specularColor = new BABYLON.Color3(0.5, 0.5, 0.5);
     graniteMat.specularPower = 64;
 
     const graniteTexture = new BABYLON.DynamicTexture("graniteTex_" + position.x, { width: 512, height: 512 }, scene);
     const ctx = graniteTexture.getContext();
-    ctx.fillStyle = "#9e8e88"; // ✅ base rosata/grigia stile Minecraft
+    ctx.fillStyle = "#9e8e88";
     ctx.fillRect(0, 0, 512, 512);
     for (let i = 0; i < 30; i++) {
         ctx.strokeStyle = `rgba(80,60,60,${0.05 + Math.random() * 0.1})`;

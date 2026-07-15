@@ -367,12 +367,12 @@ const createScene = async function () {
 
   //  Quadri
   const gallery = [
-    { pos: new BABYLON.Vector3(-8, 12, -22), img: "/assets/img/dipinto1.png" },
-    { pos: new BABYLON.Vector3(13, 12, -22), img: "/assets/img/dipinto1.png" },
-    { pos: new BABYLON.Vector3(50, 12, -22), img: "/assets/img/dipinto1.png" },
-    { pos: new BABYLON.Vector3(-8, 12, 27), img: "/assets/img/dipinto1.png" },
-    { pos: new BABYLON.Vector3(13, 12, 27), img: "/assets/img/dipinto1.png" },
-    { pos: new BABYLON.Vector3(50, 12, 27), img: "/assets/img/dipinto1.png" },
+    { pos: new BABYLON.Vector3(-8, 12, -22), img: "assets/img/dipinto1.png" },
+    { pos: new BABYLON.Vector3(13, 12, -22), img: "assets/img/dipinto1.png" },
+    { pos: new BABYLON.Vector3(50, 12, -22), img: "assets/img/dipinto1.png" },
+    { pos: new BABYLON.Vector3(-8, 12, 27), img: "assets/img/dipinto1.png" },
+    { pos: new BABYLON.Vector3(13, 12, 27), img: "assets/img/dipinto1.png" },
+    { pos: new BABYLON.Vector3(50, 12, 27), img: "assets/img/dipinto1.png" },
   ];
   gallery.forEach((item, index) => {
     createPainting(scene, item.pos, "quadro_" + index, item.img);
