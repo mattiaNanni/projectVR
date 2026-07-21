@@ -1,7 +1,7 @@
 export function generateComplexVaultsAndDome(scene, domeMaterial) {
     // ✅ Outer Z
     const vaultOuterZ = BABYLON.MeshBuilder.CreateCylinder("vaultOuterZ", {
-        height: 268, diameter: 78, tessellation: 21
+        height: 268, diameter: 78, tessellation: 18
     }, scene);
     vaultOuterZ.rotation.x = Math.PI / 2;
     vaultOuterZ.position = new BABYLON.Vector3(111.9, 27, 5.5);
@@ -10,7 +10,7 @@ export function generateComplexVaultsAndDome(scene, domeMaterial) {
 
     // ✅ Inner Z
     const vaultInnerZ = BABYLON.MeshBuilder.CreateCylinder("vaultInnerZ", {
-        height: 269, diameter: 69, tessellation: 21
+        height: 269, diameter: 69, tessellation: 18
     }, scene);
     vaultInnerZ.rotation.x = Math.PI / 2;
     vaultInnerZ.position = new BABYLON.Vector3(111.9, 27, 5.5);
@@ -19,7 +19,7 @@ export function generateComplexVaultsAndDome(scene, domeMaterial) {
 
     // ✅ Outer X
     const vaultOuterX = BABYLON.MeshBuilder.CreateCylinder("vaultOuterX", {
-        height: 300, diameter: 1, tessellation: 21
+        height: 300, diameter: 1, tessellation: 18
     }, scene);
     vaultOuterX.rotation.z = Math.PI / 2;
     vaultOuterX.scaling = new BABYLON.Vector3(77.9, 1, 27);
@@ -29,7 +29,7 @@ export function generateComplexVaultsAndDome(scene, domeMaterial) {
 
     // ✅ Inner X
     const vaultInnerX = BABYLON.MeshBuilder.CreateCylinder("vaultInnerX", {
-        height: 301, diameter: 1, tessellation: 21
+        height: 301, diameter: 1, tessellation: 18
     }, scene);
     vaultInnerX.rotation.z = Math.PI / 2;
     vaultInnerX.scaling = new BABYLON.Vector3(73.9, 1, 27);
