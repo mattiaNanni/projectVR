@@ -6,7 +6,7 @@ import {
   createCoordDisplay,
   createPortal
 } from "./engine.js?v=12";
-import { createPainting, generateComplexVaultsAndDome, placeDoors, placeColumns, placeSecondColumns } from "./Utils.js?=v4";
+import { createPainting, generateComplexVaultsAndDome, placeDoors, placeColumns, placeSecondColumns } from "./Utils.js?=v5";
 import { placeAltar, createGlass, placeOrgan, placeWoodDoor  } from "./glbUtils.js?v=4";
 import { placeInfoBoards } from "./placeTxt.js?v=4";
 import { placeInfoImages } from "./imgUtils.js?v=5";
